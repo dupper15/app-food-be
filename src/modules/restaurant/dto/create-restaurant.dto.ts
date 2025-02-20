@@ -1,4 +1,5 @@
-import {  IsNotEmpty,
+import {
+  IsNotEmpty,
   IsString,
   IsOptional,
   IsArray,
@@ -37,7 +38,7 @@ export class CreateRestaurantDto {
   @IsString({ each: true })
   category?: Array<string>;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsBoolean()
   isDeleted: boolean;
 }
