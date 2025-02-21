@@ -1,5 +1,4 @@
-import {
-  IsNotEmpty,
+import {  IsNotEmpty,
   IsString,
   IsOptional,
   IsArray,
@@ -19,6 +18,12 @@ export class CreateRestaurantDto {
   @IsNotEmpty()
   @IsString()
   description: string;
+
+  @IsNumber()
+  total_reviews: number;
+
+  @IsNumber()
+  total_orders: number;
 
   @IsNotEmpty()
   @IsString()
