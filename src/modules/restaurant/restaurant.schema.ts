@@ -1,4 +1,5 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';@Schema({ timestamps: true })
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+@Schema({ timestamps: true })
 export class Restaurant {
   @Prop({ required: true })
   owner_id: string;
