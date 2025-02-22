@@ -1,5 +1,4 @@
-import {
-  Controller,
+import {  Controller,
   Post,
   Body,
   UsePipes,
@@ -29,12 +28,6 @@ export class RestaurantController {
 
   @Get(':id')
   async fetchRestaurantById(@Param('id') id: ObjectId) {
-    const restaurant = await this.restaurantService.fetchDetailRestaurant(id);
-
-    if (!restaurant) {
-      throw new NotFoundException(`Restaurant with ID ${id} not found`);
-    }
-
-    return restaurant;
+    return await this.restaurantService.fetchDetailRestaurant(id);
   }
 }
