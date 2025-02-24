@@ -4,6 +4,9 @@ import { ObjectId } from 'mongoose';
 @Schema({ timestamps: true })
 export class Customer extends User {
   @Prop({ default: null })
+  name?: string;
+
+  @Prop({ default: null })
   avatar?: string;
 
   @Prop({ default: [] })
@@ -35,6 +38,9 @@ export class Customer extends User {
 
   @Prop({ default: 0 })
   code_expired: Date;
+
+  @Prop({ default: false })
+  isVerified: boolean;
 
   @Prop({ required: true, default: 'Enable', enum: ['Enable', 'Disable'] })
   status: string;
