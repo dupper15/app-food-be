@@ -9,5 +9,14 @@ export class User {
 
   @Prop({ required: true })
   phone_number: string;
+
+  @Prop({ default: null })
+  verified_code: number;
+
+  @Prop({ default: 0 })
+  code_expired: Date;
+
+  @Prop({ default: false })
+  isVerified: boolean;
 }
 export const UserSchema = SchemaFactory.createForClass(User);

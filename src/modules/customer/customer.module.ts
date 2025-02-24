@@ -1,7 +1,10 @@
-import { Module } from '@nestjs/common';import { MongooseModule } from '@nestjs/mongoose';
+import { Module } from '@nestjs/common';
+import { MongooseModule } from '@nestjs/mongoose';
 import { Customer, CustomerSchema } from './customer.schema';
 import { CustomerService } from './customer.service';
 import { CustomersController } from './customer.controller';
+import { JwtModule } from 'src/jwt/jwt.module';
+import { MailModule } from 'src/mailer/mail.module';
 
 @Module({
   imports: [
@@ -11,6 +14,8 @@ import { CustomersController } from './customer.controller';
         schema: CustomerSchema,
       },
     ]),
+    JwtModule,
+    MailModule,
   ],
   providers: [CustomerService],
   controllers: [CustomersController],
