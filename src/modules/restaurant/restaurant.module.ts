@@ -18,5 +18,6 @@ import { RestaurantController } from './restaurant.controller';
   ],
   providers: [RestaurantService],
   controllers: [RestaurantController],
+  exports: [MongooseModule],
 })
 export class RestaurantModule {}

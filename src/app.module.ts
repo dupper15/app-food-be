@@ -1,8 +1,10 @@
-import { Module } from '@nestjs/common';import { MongooseModule } from '@nestjs/mongoose';
+import { Module } from '@nestjs/common';
+import { MongooseModule } from '@nestjs/mongoose';
 import { RestaurantModule } from './modules/restaurant/restaurant.module';
 import * as dotenv from 'dotenv';
 import { UserModule } from './modules/user/user.module';
 import { CustomerModule } from './modules/customer/customer.module';
+import { ToppingModule } from './modules/topping/topping.module';
 dotenv.config();
 @Module({
   imports: [
@@ -12,6 +14,7 @@ dotenv.config();
     RestaurantModule,
     UserModule,
     CustomerModule,
+    ToppingModule,
   ],
   controllers: [],
   providers: [],
