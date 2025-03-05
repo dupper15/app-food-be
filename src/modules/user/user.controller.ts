@@ -1,7 +1,6 @@
 import {
   Body,
   Controller,
-  Get,
   Post,
   Query,
   UsePipes,
@@ -24,7 +23,7 @@ export class UserController {
 
   @Post('login')
   @UsePipes(new ValidationPipe())
-  async loginUser(@Body() loginUserDto: LoginUserDto, user: any) {
+  async loginUser(@Body() loginUserDto: LoginUserDto) {
     return await this.userService.login(loginUserDto);
   }
 

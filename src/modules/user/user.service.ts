@@ -1,12 +1,11 @@
-import { BadRequestException, HttpException, Injectable } from '@nestjs/common';import { InjectModel } from '@nestjs/mongoose';
+import { BadRequestException, HttpException, Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
 import { User } from './user.schema';
 import { Model } from 'mongoose';
 import { RegisterUserDto } from './dto/register.dto';
 import * as bcrypt from 'bcrypt';
 import { LoginUserDto } from './dto/login.dto';
 import { JwtService } from 'src/jwt/jwt.service';
-import { Customer } from '../customer/customer.schema';
-import { RestaurantOwner } from '../restaurant-owner/restaurant-owner.schema';
 import { MailService } from 'src/mailer/mail.service';
 
 @Injectable()
@@ -52,7 +51,7 @@ export class UserService<T extends User> {
     const { email, password } = loginUserDto;
 
     // find role user
-    let userType = 'customer';
+    const userType = 'customer';
 
     // check email exist
     const existingUser = await this.userModel.findOne({ email });
