@@ -5,6 +5,7 @@ import * as dotenv from 'dotenv';
 import { UserModule } from './modules/user/user.module';
 import { CustomerModule } from './modules/customer/customer.module';
 import { ToppingModule } from './modules/topping/topping.module';
+import { OrderItemModule } from './modules/order-item/orderItem.module';
 dotenv.config();
 @Module({
   imports: [
@@ -15,6 +16,7 @@ dotenv.config();
     UserModule,
     CustomerModule,
     ToppingModule,
+    OrderItemModule,
   ],
   controllers: [],
   providers: [],
