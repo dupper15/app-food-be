@@ -11,31 +11,29 @@ import {
 import { ToppingService } from './topping.service';
 import { AddToppingDto } from './dto/addTopping.dto';
 import { EditToppingDto } from './dto/editTopping.dto';
-import { Types } from 'mongoose';
+import { ObjectId } from 'mongoose';
 
 @Controller('toppings')
 export class ToppingController {
-  constructor(private readonly toppingServive: ToppingService) {}
+  constructor(private readonly toppingService: ToppingService) {}
 
   @Post('add')
   @UsePipes(new ValidationPipe())
   async addToppingController(@Body() addToppingDto: AddToppingDto) {
-    return await this.toppingServive.addTopping(addToppingDto);
+    return await this.toppingService.addTopping(addToppingDto);
   }
 
   @Put('edit/:id')
   @UsePipes(new ValidationPipe())
   async editToppingController(
     @Body() editToppingDto: EditToppingDto,
-    @Param('id') id: string,
+    @Param('id') id: ObjectId,
   ) {
-    const topping_id = new Types.ObjectId(id);
-    return await this.toppingServive.editTopping(topping_id, editToppingDto);
+    return await this.toppingService.editTopping(id, editToppingDto);
   }
 
   @Delete('delete/:id')
-  async deleteToppingController(@Param('id') id: string) {
-    const topping_id = new Types.ObjectId(id);
-    return await this.toppingServive.deleteTopping(topping_id);
+  async deleteToppingController(@Param('id') id: ObjectId) {
+    return await this.toppingService.deleteTopping(id);
   }
 }

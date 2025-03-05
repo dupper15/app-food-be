@@ -2,7 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { Topping } from './topping.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { AddToppingDto } from './dto/addTopping.dto';
-import { Model, Types } from 'mongoose';
+import { Model, ObjectId } from 'mongoose';
 import { Restaurant } from '../restaurant/restaurant.schema';
 import { EditToppingDto } from './dto/editTopping.dto';
 
@@ -35,7 +35,7 @@ export class ToppingService {
   }
 
   async editTopping(
-    topping_id: Types.ObjectId,
+    id: ObjectId,
     editToppingDto: EditToppingDto,
   ): Promise<Topping> {
     const { restaurant_id, name, price, image } = editToppingDto;
@@ -48,7 +48,7 @@ export class ToppingService {
 
     // find topping to update
     const updatedTopping = await this.toppingModel.findByIdAndUpdate(
-      topping_id,
+      id,
       { name, price, image },
       { new: true, runValidators: true },
     );
@@ -61,9 +61,9 @@ export class ToppingService {
     return updatedTopping;
   }
 
-  async deleteTopping(topping_id: Types.ObjectId): Promise<{ msg: string }> {
+  async deleteTopping(id: ObjectId): Promise<{ msg: string }> {
     //find topping to delete
-    const deletedTopping = await this.toppingModel.findById(topping_id);
+    const deletedTopping = await this.toppingModel.findById(id);
 
     //check topping
     if (!deletedTopping) {
@@ -71,7 +71,7 @@ export class ToppingService {
     }
 
     //delete
-    await this.toppingModel.findByIdAndDelete(topping_id);
+    await this.toppingModel.findByIdAndDelete(id);
 
     return { msg: 'Topping deleted successfully' };
   }
