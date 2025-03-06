@@ -71,8 +71,7 @@ export class UserService<T extends User> {
     const { email, password } = loginUserDto;
 
     // find role user
-    // eslint-disable-next-line prefer-const
-    let userType = 'customer';
+    const userType = 'customer';
 
     // check email exist
     const existingUser = await this.userModel.findOne({ email });
