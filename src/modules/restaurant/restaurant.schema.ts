@@ -1,8 +1,10 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Types } from 'mongoose';
+
 @Schema({ timestamps: true })
 export class Restaurant {
-  @Prop({ required: true })
-  owner_id: string;
+  @Prop({ required: true, type: Types.ObjectId, ref: 'RestaurantOwner' })
+  owner_id: Types.ObjectId;
 
   @Prop({ required: true })
   name: string;
@@ -10,25 +12,25 @@ export class Restaurant {
   @Prop({ required: true })
   description: string;
 
-  @Prop({ default: 0 })
+  @Prop({ default: 0, required: false })
   total_reviews: number;
 
   @Prop({ required: true })
   address: string;
 
-  @Prop({ default: 0 })
+  @Prop({ default: 0, required: false })
   total_orders: number;
 
-  @Prop({ required: false })
+  @Prop({ required: false, type: Number })
   rating: number;
 
-  @Prop({ required: false })
-  banner: Array<string>;
+  @Prop({ required: false, default: [] })
+  banners: Array<string>;
 
-  @Prop({ required: false })
-  category: Array<string>;
+  @Prop({ required: false, default: 'Enable', enum: ['Enable', 'Disable'] })
+  status: string;
 
-  @Prop({ default: false })
+  @Prop({ default: false, required: false })
   isDeleted: boolean;
 }
 export const RestaurantSchema = SchemaFactory.createForClass(Restaurant);

@@ -1,15 +1,19 @@
-import {  IsNotEmpty,
+import {
+  IsNotEmpty,
   IsString,
   IsOptional,
   IsArray,
   IsBoolean,
   IsNumber,
+  IsMongoId,
+  IsEnum,
 } from 'class-validator';
+import { Types } from 'mongoose';
 
 export class CreateRestaurantDto {
   @IsNotEmpty()
-  @IsString()
-  owner_id: string;
+  @IsMongoId()
+  owner_id: Types.ObjectId;
 
   @IsNotEmpty()
   @IsString()
@@ -20,9 +24,11 @@ export class CreateRestaurantDto {
   description: string;
 
   @IsNumber()
+  @IsOptional()
   total_reviews: number;
 
   @IsNumber()
+  @IsOptional()
   total_orders: number;
 
   @IsNotEmpty()
@@ -46,4 +52,8 @@ export class CreateRestaurantDto {
   @IsOptional()
   @IsBoolean()
   isDeleted: boolean;
+
+  @IsOptional()
+  @IsEnum(['Enable', 'Disable'])
+  status?: string;
 }

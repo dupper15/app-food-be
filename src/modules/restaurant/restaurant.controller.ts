@@ -1,4 +1,5 @@
-import {  Controller,
+import {
+  Controller,
   Post,
   Body,
   UsePipes,
@@ -17,7 +18,9 @@ export class RestaurantController {
 
   @Post()
   @UsePipes(new ValidationPipe())
-  async createRestaurant(@Body() createRestaurantDto: CreateRestaurantDto) {
+  async createRestaurant(
+    @Body() createRestaurantDto: CreateRestaurantDto,
+  ): Promise<any> {
     return await this.restaurantService.create(createRestaurantDto);
   }
 
