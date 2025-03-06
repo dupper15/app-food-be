@@ -8,12 +8,12 @@ import {
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { RegisterUserDto } from './dto/register.dto';
-import { User } from './user.schema';
 import { LoginUserDto } from './dto/login.dto';
+import { User } from './user.schema';
 
 @Controller('users')
-export class UserController {
-  constructor(private readonly userService: UserService<User>) {}
+export class UserController<T extends User> {
+  constructor(private readonly userService: UserService<T>) {}
 
   @Post('register')
   @UsePipes(new ValidationPipe())
@@ -25,11 +25,6 @@ export class UserController {
   @UsePipes(new ValidationPipe())
   async loginUser(@Body() loginUserDto: LoginUserDto) {
     return await this.userService.login(loginUserDto);
-  }
-
-  @Post('logout')
-  async logoutUser() {
-    return await this.userService.logout();
   }
 
   @Post('send-code')

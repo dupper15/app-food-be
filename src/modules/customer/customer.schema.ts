@@ -1,49 +1,51 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';import { User } from '../user/user.schema';
-import { ObjectId } from 'mongoose';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { User } from '../user/user.schema';
+import { Schema as MongooseSchema } from 'mongoose';
 
 @Schema({ timestamps: true })
 export class Customer extends User {
-  @Prop({ default: null })
-  name?: string;
+  @Prop({ default: '' })
+  name: string;
 
-  @Prop({ default: null })
-  avatar?: string;
-
-  @Prop({ default: [] })
-  address?: Array<string>;
-
-  @Prop({ default: 0 })
-  total_logins?: number;
-
-  @Prop({ default: 0 })
-  total_orders?: number;
-
-  @Prop({ default: 0 })
-  total_time_spent?: number;
-
-  @Prop({ default: 0 })
-  last_login?: Date;
-
-  @Prop({ default: false })
-  isDeleted?: boolean;
+  @Prop({ default: '' })
+  avatar: string;
 
   @Prop({ default: [] })
-  favorite_restaurants?: Array<ObjectId>;
+  address: Array<string>;
+
+  @Prop({ default: '' })
+  phone: string;
 
   @Prop({ default: 0 })
-  total_points?: number;
-
-  @Prop({ default: null })
-  verified_code: number;
+  total_logins: number;
 
   @Prop({ default: 0 })
-  code_expired: Date;
+  total_orders: number;
+
+  @Prop({ default: 0 })
+  total_time_spent: number;
+
+  @Prop({ default: 0 })
+  last_login: Date;
 
   @Prop({ default: false })
-  isVerified: boolean;
+  isDeleted: boolean;
 
-  @Prop({ required: true, default: 'Enable', enum: ['Enable', 'Disable'] })
-  status: string;
+  @Prop({ type: [MongooseSchema.Types.ObjectId], ref: 'History', default: [] })
+  history: MongooseSchema.Types.ObjectId[];
+
+  @Prop({ type: [MongooseSchema.Types.ObjectId], ref: 'Cart', default: [] })
+  cart: MongooseSchema.Types.ObjectId[];
+
+  @Prop({
+    type: [MongooseSchema.Types.ObjectId],
+    ref: 'Restaurant',
+    default: [],
+  })
+  favorite_restaurants: MongooseSchema.Types.ObjectId[];
+
+  @Prop({ default: 0 })
+  total_points: number;
 }
 
 export const CustomerSchema = SchemaFactory.createForClass(Customer);
