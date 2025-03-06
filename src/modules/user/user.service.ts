@@ -1,23 +1,40 @@
-import { BadRequestException, HttpException, Injectable } from '@nestjs/common';import { InjectModel } from '@nestjs/mongoose';
+import { BadRequestException, HttpException, Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
 import { User } from './user.schema';
 import { Model } from 'mongoose';
 import { RegisterUserDto } from './dto/register.dto';
 import * as bcrypt from 'bcrypt';
 import { LoginUserDto } from './dto/login.dto';
 import { JwtService } from 'src/jwt/jwt.service';
-import { Customer } from '../customer/customer.schema';
-import { RestaurantOwner } from '../restaurant-owner/restaurant-owner.schema';
 import { MailService } from 'src/mailer/mail.service';
+import { RestaurantOwner } from '../restaurant-owner/restaurant-owner.schema';
+import { Customer } from '../customer/customer.schema';
+import { Admin } from '../admin/admin.schema';
 
 @Injectable()
 export class UserService<T extends User> {
   constructor(
     @InjectModel(User.name) protected readonly userModel: Model<T>,
+    @InjectModel(RestaurantOwner.name)
+    protected readonly restaurantOwnerModel: Model<RestaurantOwner>,
+    @InjectModel(Customer.name)
+    protected readonly customerModel: Model<Customer>,
+    @InjectModel(Admin.name) protected readonly adminModel: Model<Admin>,
     protected readonly jwtService: JwtService,
     protected readonly mailService: MailService,
   ) {}
 
-  async register(registerUserDto: RegisterUserDto): Promise<T> {
+  async checkUser(email: string): Promise<boolean> {
+    const [customerExist, adminExist, restaurantOwnerExist] = await Promise.all(
+      [
+        this.customerModel.findOne({ email }).exec(),
+        this.adminModel.findOne({ email }).exec(),
+        this.restaurantOwnerModel.findOne({ email }).exec(),
+      ],
+    );
+    return customerExist || adminExist || restaurantOwnerExist ? true : false;
+  }
+  async register(registerUserDto: RegisterUserDto): Promise<User> {
     const { email, password, confirmPassword } = registerUserDto;
 
     // check email exist
@@ -32,11 +49,13 @@ export class UserService<T extends User> {
     }
 
     // hash password
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // create new user
     const newUser = new this.userModel({
       ...registerUserDto,
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       password: hashedPassword,
     });
 
@@ -52,6 +71,7 @@ export class UserService<T extends User> {
     const { email, password } = loginUserDto;
 
     // find role user
+    // eslint-disable-next-line prefer-const
     let userType = 'customer';
 
     // check email exist
@@ -61,6 +81,7 @@ export class UserService<T extends User> {
     }
 
     // check password
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     const isPasswordMatch = await bcrypt.compare(
       password,
       existingUser.password,
@@ -86,7 +107,7 @@ export class UserService<T extends User> {
     };
   }
 
-  async logout(): Promise<{ message: string }> {
+  logout(): { message: string } {
     return { message: 'Logout successfully' };
   }
 

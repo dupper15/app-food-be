@@ -3,7 +3,7 @@ import { User } from '../user/user.schema';
 
 @Schema({ timestamps: true })
 export class RestaurantOwner extends User {
-  @Prop({ required: true })
+  @Prop({ default: '' })
   avatar: string;
 
   @Prop({ default: 0 })
@@ -11,6 +11,9 @@ export class RestaurantOwner extends User {
 
   @Prop({ default: 0 })
   total_logins: number;
+
+  @Prop({ default: '' })
+  phone: string;
 
   @Prop({ default: false })
   isDeleted: boolean;

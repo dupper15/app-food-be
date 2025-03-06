@@ -1,11 +1,54 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { RestaurantOwner } from './restaurant-owner.schema';
-
+import { UserService } from '../user/user.service';
+import { Model } from 'mongoose';
+import { JwtService } from 'src/jwt/jwt.service';
+import { MailService } from 'src/mailer/mail.service';
+import { RegisterRestaurantDto } from './dto/register-restaurant.dto';
+import * as bcrypt from 'bcrypt';
+import { Customer } from '../customer/customer.schema';
+import { Admin } from '../admin/admin.schema';
 @Injectable()
-export class RestaurantOwnerService {
+export class RestaurantOwnerService extends UserService<RestaurantOwner> {
   constructor(
     @InjectModel(RestaurantOwner.name)
-    private readonly restaurantOwnerModel: RestaurantOwner,
-  ) {}
+    protected readonly restaurantOwnerModel: Model<RestaurantOwner>,
+    protected readonly jwtService: JwtService,
+    protected readonly mailService: MailService,
+    @InjectModel(Customer.name)
+    protected readonly customerModel: Model<Customer>,
+    @InjectModel(Admin.name) protected readonly adminModel: Model<Admin>,
+  ) {
+    super(
+      restaurantOwnerModel,
+      restaurantOwnerModel,
+      customerModel,
+      adminModel,
+      jwtService,
+      mailService,
+    );
+  }
+  async register(
+    registerRestaurantOwnerDto: RegisterRestaurantDto,
+  ): Promise<RestaurantOwner> {
+    const { email, password, confirmPassword } = registerRestaurantOwnerDto;
+    if (await super.checkUser(email)) {
+      throw new BadRequestException('Email already exists');
+    }
+    if (password !== confirmPassword) {
+      throw new BadRequestException('Password not match! Please try again');
+    }
+    if (typeof password !== 'string') {
+      throw new Error('Password must be a string');
+    }
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newRestaurantOwner = new this.restaurantOwnerModel({
+      ...registerRestaurantOwnerDto,
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      password: hashedPassword,
+    });
+    return newRestaurantOwner.save();
+  }
 }
