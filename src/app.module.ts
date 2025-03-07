@@ -7,6 +7,8 @@ import { UserModule } from './modules/user/user.module';
 import { CustomerModule } from './modules/customer/customer.module';
 import { ToppingModule } from './modules/topping/topping.module';
 import { OrderItemModule } from './modules/order-item/orderItem.module';
+import { MessageModule } from './modules/message/message.module';
+import { ConversationModule } from './modules/conversation/converstation.module';
 dotenv.config();
 @Module({
   imports: [
@@ -19,6 +21,8 @@ dotenv.config();
     RestaurantOwnerModule,
     ToppingModule,
     OrderItemModule,
+    MessageModule,
+    ConversationModule,
   ],
   controllers: [],
   providers: [],

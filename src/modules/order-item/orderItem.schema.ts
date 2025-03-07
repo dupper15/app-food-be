@@ -1,10 +1,9 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { ObjectId } from 'mongoose';
+import { ObjectId, Types } from 'mongoose';
 @Schema({ timestamps: true })
 export class OrderItem {
-  @Prop({ required: true })
-  dish_id: ObjectId;
-
+  @Prop({ type: Types.ObjectId, ref: 'Dish', required: true })
+  dish_id: Types.ObjectId;
   @Prop({ required: true })
   quantity: number;
 
