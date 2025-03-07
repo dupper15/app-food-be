@@ -1,11 +1,11 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { ObjectId } from 'mongoose';
+import { ObjectId, Types } from 'mongoose';
 @Schema({ timestamps: true })
 export class Dish {
-  @Prop({ required: true })
+  @Prop({ type: Types.ObjectId, ref: 'Restaurant', required: true })
   restaurant_id: ObjectId;
 
-  @Prop({ required: true })
+  @Prop({ type: Types.ObjectId, ref: 'Category', required: true })
   category_id: ObjectId;
 
   @Prop({ required: true })
@@ -23,8 +23,8 @@ export class Dish {
   @Prop({ required: true })
   price: number;
 
-  @Prop({ default: [] })
-  topping: Array<ObjectId>;
+  @Prop({ type: [Types.ObjectId], ref: 'Topping', default: [] })
+  topping: Types.ObjectId[];
 
   @Prop({ default: false })
   best_seller: boolean;

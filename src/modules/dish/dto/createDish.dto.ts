@@ -1,13 +1,15 @@
-import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
-import { ObjectId } from 'mongoose';
+import { IsMongoId, IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { Types } from 'mongoose';
 export class CreateDishDto {
   @IsNotEmpty()
   @IsString()
-  restaurant_id: ObjectId;
+  @IsMongoId()
+  restaurant_id: Types.ObjectId;
 
   @IsNotEmpty()
   @IsString()
-  category_id: ObjectId;
+  @IsMongoId()
+  category_id: Types.ObjectId;
 
   @IsNotEmpty()
   @IsString()
@@ -29,5 +31,5 @@ export class CreateDishDto {
   @IsNumber()
   price: number;
 
-  topping: Array<ObjectId>;
+  topping: Types.ObjectId[];
 }

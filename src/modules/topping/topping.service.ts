@@ -74,4 +74,8 @@ export class ToppingService {
 
     return { msg: 'Topping deleted successfully' };
   }
+
+  async getAllTopping(id: ObjectId): Promise<Topping[]> {
+    return await this.toppingModel.find({ restaurant_id: id }).exec();
+  }
 }
