@@ -1,5 +1,4 @@
-import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
+import { Module } from '@nestjs/common';import { MongooseModule } from '@nestjs/mongoose';
 import { RestaurantModule } from './modules/restaurant/restaurant.module';
 import { RestaurantOwnerModule } from './modules/restaurant-owner/restaurant-owner.module';
 import * as dotenv from 'dotenv';
@@ -11,6 +10,13 @@ import { MessageModule } from './modules/message/message.module';
 import { ConversationModule } from './modules/conversation/converstation.module';
 import { CategoryModule } from './modules/category/category.module';
 import { DishModule } from './modules/dish/dish.module';
+import { ReflectModule } from './modules/reflect/reflect.module';
+import { NotificationModule } from './modules/notification/notification.module';
+import { RatingModule } from './modules/rating/rating.module';
+import { ReplyModule } from './modules/reply/reply.module';
+import { Voucher } from './modules/voucher/voucher.schema';
+import { VoucherModule } from './modules/voucher/voucher.module';
+import { HistoryModule } from './modules/history/history.module';
 dotenv.config();
 @Module({
   imports: [
@@ -27,6 +33,12 @@ dotenv.config();
     ConversationModule,
     CategoryModule,
     DishModule,
+    ReflectModule,
+    NotificationModule,
+    RatingModule,
+    ReplyModule,
+    VoucherModule,
+    HistoryModule,
   ],
   controllers: [],
   providers: [],
