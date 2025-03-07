@@ -7,6 +7,8 @@ import { UserModule } from './modules/user/user.module';
 import { CustomerModule } from './modules/customer/customer.module';
 import { ToppingModule } from './modules/topping/topping.module';
 import { OrderItemModule } from './modules/order-item/orderItem.module';
+import { MessageModule } from './modules/message/message.module';
+import { ConversationModule } from './modules/conversation/converstation.module';
 import { CategoryModule } from './modules/category/category.module';
 import { DishModule } from './modules/dish/dish.module';
 dotenv.config();
@@ -21,6 +23,8 @@ dotenv.config();
     RestaurantOwnerModule,
     ToppingModule,
     OrderItemModule,
+    MessageModule,
+    ConversationModule,
     CategoryModule,
     DishModule,
   ],
