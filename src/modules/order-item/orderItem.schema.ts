@@ -1,14 +1,14 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { ObjectId } from 'mongoose';
+import { ObjectId, Types } from 'mongoose';
 @Schema({ timestamps: true })
 export class OrderItem {
-  @Prop({ required: true })
+  @Prop({ type: Types.ObjectId, ref: 'Dish', required: true })
   dish_id: ObjectId;
 
   @Prop({ required: true })
   quantity: number;
 
-  @Prop({ default: [] })
-  topping_array: Array<ObjectId>;
+  @Prop({ type: [Types.ObjectId], ref: 'Topping', default: [] })
+  topping_array: Types.ObjectId[];
 }
 export const OrderItemSchema = SchemaFactory.createForClass(OrderItem);

@@ -1,8 +1,8 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { ObjectId } from 'mongoose';
+import { ObjectId, Types } from 'mongoose';
 @Schema({ timestamps: true })
 export class Topping {
-  @Prop({ required: true })
+  @Prop({ type: Types.ObjectId, ref: 'Restaurant', required: true })
   restaurant_id: ObjectId;
 
   @Prop({ required: true })

@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Delete,
+  Get,
   Param,
   Post,
   Put,
@@ -35,5 +36,10 @@ export class ToppingController {
   @Delete('delete/:id')
   async deleteToppingController(@Param('id') id: ObjectId) {
     return await this.toppingService.deleteTopping(id);
+  }
+
+  @Get('getall-by-restaurant/:id')
+  async getAllToppingController(@Param('id') id: ObjectId) {
+    return await this.toppingService.getAllTopping(id);
   }
 }

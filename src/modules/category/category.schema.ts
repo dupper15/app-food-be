@@ -1,4 +1,7 @@
-import { Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 @Schema({ timestamps: true })
-export class Category {}
+export class Category {
+  @Prop({ required: true, unique: true })
+  name: string;
+}
 export const CategorySchema = SchemaFactory.createForClass(Category);

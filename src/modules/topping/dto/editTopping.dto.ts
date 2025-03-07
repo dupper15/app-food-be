@@ -1,9 +1,6 @@
 import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 export class EditToppingDto {
   @IsNotEmpty()
-  restaurant_id: string;
-
-  @IsNotEmpty()
   @IsString()
   name: string;
 

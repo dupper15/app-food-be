@@ -23,7 +23,12 @@ export class ToppingService {
       throw new BadRequestException('Restaurant not found');
     }
 
-    const newTopping = new this.toppingModel({ name, price, image });
+    const newTopping = new this.toppingModel({
+      restaurant_id,
+      name,
+      price,
+      image,
+    });
 
     try {
       return await newTopping.save();
@@ -38,13 +43,7 @@ export class ToppingService {
     id: ObjectId,
     editToppingDto: EditToppingDto,
   ): Promise<Topping> {
-    const { restaurant_id, name, price, image } = editToppingDto;
-
-    //check restaurant
-    const checkRestaurant = await this.restaurantModel.findById(restaurant_id);
-    if (!checkRestaurant) {
-      throw new BadRequestException('Restaurant not found');
-    }
+    const { name, price, image } = editToppingDto;
 
     // find topping to update
     const updatedTopping = await this.toppingModel.findByIdAndUpdate(
@@ -74,5 +73,9 @@ export class ToppingService {
     await this.toppingModel.findByIdAndDelete(id);
 
     return { msg: 'Topping deleted successfully' };
+  }
+
+  async getAllTopping(id: ObjectId): Promise<Topping[]> {
+    return await this.toppingModel.find({ restaurant_id: id }).exec();
   }
 }
