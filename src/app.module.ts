@@ -17,6 +17,7 @@ import { RatingModule } from './modules/rating/rating.module';
 import { ReplyModule } from './modules/reply/reply.module';
 import { VoucherModule } from './modules/voucher/voucher.module';
 import { HistoryModule } from './modules/history/history.module';
+import { UploadModule } from './modules/upload/upload.module';
 dotenv.config();
 @Module({
   imports: [
@@ -39,6 +40,7 @@ dotenv.config();
     ReplyModule,
     VoucherModule,
     HistoryModule,
+    UploadModule,
   ],
   controllers: [],
   providers: [],
