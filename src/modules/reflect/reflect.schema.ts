@@ -1,5 +1,4 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { ObjectId, Types } from 'mongoose';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';import { ObjectId, Types } from 'mongoose';
 import { Document } from 'mongoose';
 
 export type ReflectDocument = Reflect & Document;
@@ -9,7 +8,7 @@ export class Reflect {
   @Prop({ type: Types.ObjectId, required: true, ref: 'Customer' })
   customer_id: ObjectId;
 
-  @Prop({ required: true })
+  @Prop({ required: true, type: String })
   content: string;
 
   @Prop({ type: [String], default: [] })

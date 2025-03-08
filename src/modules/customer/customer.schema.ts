@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { User } from '../user/user.schema';
-import { Schema as MongooseSchema } from 'mongoose';
+import { Schema as MongooseSchema, Types } from 'mongoose';
 
 @Schema({ timestamps: true })
 export class Customer extends User {
@@ -10,7 +10,7 @@ export class Customer extends User {
   @Prop({ default: '' })
   avatar: string;
 
-  @Prop({ default: [] })
+  @Prop({ default: [], type: [String] })
   address: Array<string>;
 
   @Prop({ default: '' })
@@ -32,17 +32,13 @@ export class Customer extends User {
   isDeleted: boolean;
 
   @Prop({ type: [MongooseSchema.Types.ObjectId], ref: 'History', default: [] })
-  history: MongooseSchema.Types.ObjectId[];
-
-  @Prop({ type: [MongooseSchema.Types.ObjectId], ref: 'Cart', default: [] })
-  cart: MongooseSchema.Types.ObjectId[];
+  history: Types.ObjectId[];
 
   @Prop({
-    type: [MongooseSchema.Types.ObjectId],
-    ref: 'Restaurant',
+    type: [{ type: MongooseSchema.Types.ObjectId, ref: 'Restaurant' }],
     default: [],
   })
-  favorite_restaurants: MongooseSchema.Types.ObjectId[];
+  favorite_restaurants: Types.ObjectId[];
 
   @Prop({ default: 0 })
   total_points: number;
