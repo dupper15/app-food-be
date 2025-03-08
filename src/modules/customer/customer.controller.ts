@@ -1,6 +1,9 @@
 import {
   Body,
   Controller,
+  Delete,
+  Get,
+  Param,
   Post,
   UsePipes,
   ValidationPipe,
@@ -20,5 +23,51 @@ export class CustomersController extends UserController<Customer> {
   @UsePipes(new ValidationPipe())
   async register(@Body() registerCustomerDto: RegisterCustomerDto) {
     return await this.customerService.register(registerCustomerDto);
+  }
+  @Get(':id')
+  async getDetailCustomerById(@Param('id') userId: string) {
+    return await this.customerService.getDetailCustomerById(userId);
+  }
+  @Post(':id/favorite-restaurant/:restaurantId')
+  async addFavoriteRestaurant(
+    @Param('id') userId: string,
+    @Param('restaurantId') restaurantId: string,
+  ) {
+    return await this.customerService.addFavoriteRestaurant(
+      userId,
+      restaurantId,
+    );
+  }
+  @Delete(':id/favorite-restaurant/:restaurantId')
+  async removeFavoriteRestaurant(
+    @Param('id') userId: string,
+    @Param('restaurantId') restaurantId: string,
+  ) {
+    return await this.customerService.removeFavoriteRestaurant(
+      userId,
+      restaurantId,
+    );
+  }
+  @Get(':id/favorite-restaurant')
+  async getFavoriteRestaurants(@Param('id') userId: string) {
+    return this.customerService.getFavoriteRestaurants(userId);
+  }
+  @Post(':id/address')
+  async addAddress(
+    @Param('id') userId: string,
+    @Body() body: { address: string },
+  ) {
+    return this.customerService.addAddress(userId, body.address);
+  }
+  @Delete(':id/address')
+  async removeAddress(
+    @Param('id') userId: string,
+    @Body() body: { address: string },
+  ) {
+    return this.customerService.removeAddress(userId, body.address);
+  }
+  @Get(':id/address')
+  async getAddresses(@Param('id') userId: string) {
+    return this.customerService.getAddresses(userId);
   }
 }
