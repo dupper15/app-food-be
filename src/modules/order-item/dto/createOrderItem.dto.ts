@@ -1,14 +1,14 @@
 import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
-import { ObjectId } from 'mongoose';
+import { Types } from 'mongoose';
 
 export class CreateOrderItemDto {
   @IsNotEmpty()
   @IsString()
-  dish_id: ObjectId;
+  dish_id: Types.ObjectId;
 
   @IsNotEmpty()
   @IsNumber()
   quantity: number;
 
-  topping_array: Array<ObjectId>;
+  topping_array: Types.ObjectId[];
 }

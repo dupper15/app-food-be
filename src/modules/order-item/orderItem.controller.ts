@@ -11,7 +11,7 @@ import { OrderItemService } from './orderItem.service';
 import { CreateOrderItemDto } from './dto/createOrderItem.dto';
 import { ObjectId } from 'mongoose';
 
-@Controller('order-items')
+@Controller('order-item')
 export class OrderItemController {
   constructor(private readonly orderItemService: OrderItemService) {}
 
