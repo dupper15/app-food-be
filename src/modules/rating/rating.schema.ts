@@ -5,11 +5,14 @@ export type RatingDocument = Rating & Document;
 
 @Schema({ timestamps: true })
 export class Rating {
-  @Prop({ type: Types.ObjectId, required: true })
+  @Prop({ type: Types.ObjectId, ref: 'Order', required: true })
   order_id: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId, required: true })
+  @Prop({ type: Types.ObjectId, ref: 'Customer', required: true })
   customer_id: Types.ObjectId;
+
+  @Prop({ type: Types.ObjectId, ref: 'Restaurant', required: true })
+  restaurant_id: Types.ObjectId;
 
   @Prop({ type: [String], default: [] })
   image: string[];
