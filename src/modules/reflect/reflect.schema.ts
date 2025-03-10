@@ -14,8 +14,8 @@ export class Reflect {
   @Prop({ type: [String], default: [] })
   images: string[];
 
-  @Prop({ type: [String], default: [] })
-  replies: string[];
+  @Prop({ type: [Types.ObjectId], ref: 'Reply', default: [] })
+  replies_array: ObjectId[];
 
   @Prop({ type: Date, default: Date.now })
   create_at: Date;

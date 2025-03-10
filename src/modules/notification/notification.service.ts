@@ -26,7 +26,7 @@ export class NotificationService {
     return updatedNotification;
   }
 
-  async fetchAllNotificationsByUser(userId: string): Promise<Notification[]> {
-    return this.notificationModel.find({ userId }).exec();
+  async fetchAllNotificationsByUser(user_id: string): Promise<Notification[]> {
+    return this.notificationModel.find({ user_id }).exec();
   }
 }
