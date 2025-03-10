@@ -3,6 +3,8 @@ import { Cart } from './cart.schema';
 import { Model, Types } from 'mongoose';
 import { Dish } from '../dish/dish.schema';
 import { OrderItem } from '../order-item/orderItem.schema';
+import { OrderItemService } from './../order-item/orderItem.service';
+import { CreateOrderItemDto } from '../order-item/dto/createOrderItem.dto';
 
 @Injectable()
 export class CartService {
@@ -11,9 +13,12 @@ export class CartService {
     @Inject(Dish.name)
     private readonly dishModel: Model<Dish>,
     @Inject(OrderItem.name) private readonly orderItemModel: Model<OrderItem>,
+    private readonly orderItemService: OrderItemService,
   ) {}
-  async addDish(dishedId: string, userId: string) {
-    const dish = await this.dishModel.findById(dishedId);
+  async addDish(createOrderItemDto: CreateOrderItemDto, userId: string) {
+    const newOrderItem =
+      await this.orderItemService.createOrderItem(createOrderItemDto);
+    const dish = await this.dishModel.findById(createOrderItemDto.dish_id);
     if (!dish) {
       throw new Error('Dish not found');
     }
@@ -23,11 +28,7 @@ export class CartService {
       user_id: user,
       restaurant_id: dish.restaurant_id,
     });
-    const newOrderItem = new this.orderItemModel({
-      dish_id: new Types.ObjectId(dish._id),
-      quantity: 1,
-    });
-    await newOrderItem.save();
+
     if (cart) {
       await this.cartModel.updateOne(
         { _id: cart._id },
@@ -37,7 +38,7 @@ export class CartService {
       const newCart = new this.cartModel({
         user_id: user,
         restaurant_id: restaurantObjectId,
-        order_items: [newOrderItem],
+        order_items: [newOrderItem._id],
       });
       await newCart.save();
     }

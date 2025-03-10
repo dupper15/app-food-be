@@ -38,6 +38,11 @@ export class DishController {
     return await this.dishService.deleteDish(id);
   }
 
+  @Get('get-restaurant-by-dish/:id')
+  async getRestaurantByDish(@Param('id') id: ObjectId) {
+    return await this.dishService.getRestaurantByDish(id);
+  }
+
   @Get('fetchall-dish-by-restaurant/:id')
   async fetchAllDishByRestaurantController(@Param('id') id: ObjectId) {
     return await this.dishService.fetchAllDishByRestaurant(id);

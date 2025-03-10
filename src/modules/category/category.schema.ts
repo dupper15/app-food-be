@@ -3,5 +3,8 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 export class Category {
   @Prop({ required: true, unique: true })
   name: string;
+
+  @Prop({ default: false, required: false })
+  isDeleted: boolean;
 }
 export const CategorySchema = SchemaFactory.createForClass(Category);

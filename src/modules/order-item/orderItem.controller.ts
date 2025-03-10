@@ -27,4 +27,19 @@ export class OrderItemController {
   async deleteOrderItemController(@Param('id') id: ObjectId) {
     return await this.orderItemService.deleteOrderItem(id);
   }
+
+  @Post('increase-quantity/:id')
+  async increaseQuantityController(@Param('id') id: ObjectId) {
+    return await this.orderItemService.increaseQuantity(id);
+  }
+
+  @Post('decrease-quantity/:id')
+  async decreaseQuantityController(@Param('id') id: ObjectId): Promise<any> {
+    return await this.orderItemService.decreaseQuantity(id);
+  }
+
+  @Post('fetchall-order-item-by-list-id')
+  async fetchAllOrderItemByListIdController(@Body() listId: ObjectId[]) {
+    return await this.orderItemService.fetchAllOrderItemByListId(listId);
+  }
 }

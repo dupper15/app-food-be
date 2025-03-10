@@ -18,6 +18,6 @@ import { CartService } from './cart.service';
     DishModule,
   ],
   controllers: [CartController],
-  providers: [CartService],
+  providers: [CartService, OrderItemModule],
 })
 export class CartModule {}

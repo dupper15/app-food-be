@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 import { Types } from 'mongoose';
 
 export class CreateOrderItemDto {
@@ -10,5 +10,6 @@ export class CreateOrderItemDto {
   @IsNumber()
   quantity: number;
 
+  @IsOptional()
   topping_array: Types.ObjectId[];
 }

@@ -13,7 +13,17 @@ export class DishService {
     @InjectModel(Restaurant.name)
     private readonly restaurantModel: Model<Restaurant>,
   ) {}
-
+  async getRestaurantByDish(id: ObjectId): Promise<Restaurant> {
+    const dish = await this.dishModel.findById(id);
+    if (!dish) {
+      throw new BadRequestException('Dish not found');
+    }
+    const restaurant = await this.restaurantModel.findById(dish.restaurant_id);
+    if (!restaurant) {
+      throw new BadRequestException('Restaurant not found');
+    }
+    return restaurant;
+  }
   async createDish(createDishDto: CreateDishDto): Promise<Dish> {
     //check restaurant
     const checkRestaurant = await this.restaurantModel.findById(

@@ -1,5 +1,6 @@
-import { Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { CartService } from './cart.service';
+import { CreateOrderItemDto } from '../order-item/dto/createOrderItem.dto';
 
 @Controller('cart')
 export class CartController {
@@ -10,9 +11,9 @@ export class CartController {
   }
   @Post()
   async addDish(
-    @Param('dishId') dishId: string,
+    @Body() createOrderItemDto: CreateOrderItemDto,
     @Param('userId') userId: string,
   ) {
-    return this.cartService.addDish(dishId, userId);
+    return this.cartService.addDish(createOrderItemDto, userId);
   }
 }

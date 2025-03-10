@@ -1,5 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
+import { BadRequestException, Injectable } from '@nestjs/common';import { InjectModel } from '@nestjs/mongoose';
 import { Category } from './category.schema';
 import { Model, ObjectId } from 'mongoose';
 import { CreateCategoryDto } from './dto/createCategory.dto';
@@ -31,7 +30,7 @@ export class CategoryService {
 
   async fetchAllCategory() {
     const categories = await this.categoryModel
-      .find()
+      .find({ isDeleted: false })
       .select('_id name')
       .exec();
     return categories;
@@ -45,7 +44,7 @@ export class CategoryService {
     }
 
     const categoriesByRestaurant = await this.dishModel
-      .find({ restaurant_id: id })
+      .find({ restaurant_id: id, isDeleted: false })
       .select('category_id')
       .exec();
 
