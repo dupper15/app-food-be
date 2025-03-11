@@ -15,6 +15,6 @@ import { OrderItemService } from './orderItem.service';
   ],
   controllers: [OrderItemController],
   providers: [OrderItemService],
-  exports: [OrderItemModule, OrderItemService],
+  exports: [MongooseModule, OrderItemService],
 })
 export class OrderItemModule {}
