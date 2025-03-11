@@ -1,18 +1,20 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Cart } from './cart.schema';
 import { Model, Types } from 'mongoose';
 import { Dish } from '../dish/dish.schema';
 import { OrderItem } from '../order-item/orderItem.schema';
 import { OrderItemService } from './../order-item/orderItem.service';
 import { CreateOrderItemDto } from '../order-item/dto/createOrderItem.dto';
+import { InjectModel } from '@nestjs/mongoose';
 
 @Injectable()
 export class CartService {
   constructor(
-    @Inject(Cart.name) private readonly cartModel: Model<Cart>,
-    @Inject(Dish.name)
+    @InjectModel(Cart.name) private readonly cartModel: Model<Cart>,
+    @InjectModel(Dish.name)
     private readonly dishModel: Model<Dish>,
-    @Inject(OrderItem.name) private readonly orderItemModel: Model<OrderItem>,
+    @InjectModel(OrderItem.name)
+    private readonly orderItemModel: Model<OrderItem>,
     private readonly orderItemService: OrderItemService,
   ) {}
   async addDish(createOrderItemDto: CreateOrderItemDto, userId: string) {
@@ -30,7 +32,7 @@ export class CartService {
     });
 
     if (cart) {
-      await this.cartModel.updateOne(
+      return this.cartModel.updateOne(
         { _id: cart._id },
         { $push: { order_items: newOrderItem._id } },
       );
@@ -40,15 +42,17 @@ export class CartService {
         restaurant_id: restaurantObjectId,
         order_items: [newOrderItem._id],
       });
-      await newCart.save();
+      return newCart.save();
     }
   }
   async getOrdersByUserId(userId: string) {
+    console.log(userId);
     const user = new Types.ObjectId(userId);
     const carts = await this.cartModel
-      .find({ customer_id: user })
+      .find({ user_id: user })
       .populate('order_items')
       .populate('restaurant_id');
+    console.log(carts);
     return carts;
   }
 }

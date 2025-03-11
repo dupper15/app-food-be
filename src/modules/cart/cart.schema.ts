@@ -4,7 +4,7 @@ import { Types, Schema as MongooseSchema } from 'mongoose';
 @Schema({ timestamps: true })
 export class Cart {
   @Prop({ required: true, type: Types.ObjectId })
-  customer_id: Types.ObjectId;
+  user_id: Types.ObjectId;
 
   @Prop({ required: true, type: Types.ObjectId })
   restaurant_id: Types.ObjectId;

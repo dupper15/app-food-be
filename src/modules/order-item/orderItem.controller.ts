@@ -10,6 +10,7 @@ import {
 import { OrderItemService } from './orderItem.service';
 import { CreateOrderItemDto } from './dto/createOrderItem.dto';
 import { ObjectId } from 'mongoose';
+import { Types } from 'mongoose';
 
 @Controller('order-item')
 export class OrderItemController {
@@ -41,5 +42,12 @@ export class OrderItemController {
   @Post('fetchall-order-item-by-list-id')
   async fetchAllOrderItemByListIdController(@Body() listId: ObjectId[]) {
     return await this.orderItemService.fetchAllOrderItemByListId(listId);
+  }
+  @Post('add-topping/:id')
+  async addToppingController(
+    @Param('id') id: ObjectId,
+    @Body('list_topping') list_topping: Types.ObjectId[],
+  ) {
+    return await this.orderItemService.addTopping(id, list_topping);
   }
 }
