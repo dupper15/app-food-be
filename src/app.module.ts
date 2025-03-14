@@ -19,6 +19,7 @@ import { VoucherModule } from './modules/voucher/voucher.module';
 import { HistoryModule } from './modules/history/history.module';
 import { UploadModule } from './modules/upload/upload.module';
 import { CartModule } from './modules/cart/cart.module';
+import { AppController } from './modules/app.controller';
 dotenv.config();
 @Module({
   imports: [
@@ -44,7 +45,7 @@ dotenv.config();
     UploadModule,
     CartModule,
   ],
-  controllers: [],
+  controllers: [AppController],
   providers: [],
 })
 export class AppModule {}
