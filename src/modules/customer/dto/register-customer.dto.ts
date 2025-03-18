@@ -2,7 +2,6 @@ import { Type } from 'class-transformer';
 import {
   IsArray,
   IsOptional,
-  IsPhoneNumber,
   IsString,
   IsNumber,
   IsDate,
@@ -23,7 +22,7 @@ export class RegisterCustomerDto extends RegisterUserDto {
   address?: string[];
 
   @IsOptional()
-  @IsPhoneNumber()
+  @IsString()
   phone?: string;
 
   @IsNumber()

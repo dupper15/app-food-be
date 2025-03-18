@@ -71,11 +71,26 @@ export class UserService<T extends User> {
     const { email, password } = loginUserDto;
 
     // find role user
-    const userType = 'customer';
-
-    // check email exist
-    const existingUser = await this.userModel.findOne({ email });
-    if (!existingUser) {
+    let userType = 'customer';
+    let existingUser;
+    const existingCustomer = await this.customerModel.findOne({ email });
+    if (existingCustomer) {
+      existingUser = existingCustomer;
+      userType = 'customer';
+    }
+    const existingAdmin = await this.adminModel.findOne({ email });
+    if (existingAdmin) {
+      existingUser = existingAdmin;
+      userType = 'admin';
+    }
+    const existingRestaurantOwner = await this.restaurantOwnerModel.findOne({
+      email,
+    });
+    if (existingRestaurantOwner) {
+      existingUser = existingRestaurantOwner;
+      userType = 'restaurantOwner';
+    }
+    if (!existingCustomer && !existingAdmin && !existingRestaurantOwner) {
       throw new BadRequestException('Email not exist! Please try again');
     }
 
