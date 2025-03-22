@@ -5,6 +5,7 @@ import {
   UseInterceptors,
   UploadedFiles,
   Get,
+  Param,
 } from '@nestjs/common';
 import { RestaurantService } from './restaurant.service';
 import { FilesInterceptor } from '@nestjs/platform-express';
@@ -34,5 +35,15 @@ export class RestaurantController {
   @Get()
   async fetchAllRestaurant() {
     return await this.restaurantService.fetchAll();
+  }
+
+  @Get('history/:id')
+  async fetchHistoryRestaurantByUserId(@Param('id') id: string) {
+    return await this.restaurantService.fetchHistoryRestaurantByUserId(id);
+  }
+
+  @Get('rcm/:id')
+  async fetchRcmRestaurantByUserId(@Param('id') id: string) {
+    return await this.restaurantService.fetchRcmRestaurantByUserId(id);
   }
 }
