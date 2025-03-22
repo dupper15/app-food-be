@@ -2,32 +2,37 @@ import {
   Controller,
   Post,
   Body,
-  UsePipes,
-  ValidationPipe,
+  UseInterceptors,
+  UploadedFiles,
   Get,
 } from '@nestjs/common';
 import { RestaurantService } from './restaurant.service';
-import { CreateRestaurantDto } from './dto/create-restaurant.dto';
+import { FilesInterceptor } from '@nestjs/platform-express';
+import { UploadService } from '../upload/upload.service';
 
 @Controller('restaurants')
 export class RestaurantController {
-  constructor(private readonly restaurantService: RestaurantService) {}
+  constructor(
+    private readonly restaurantService: RestaurantService,
+    private readonly uploadService: UploadService,
+  ) {}
 
   @Post()
-  @UsePipes(new ValidationPipe())
+  @UseInterceptors(FilesInterceptor('images'))
   async createRestaurant(
-    @Body() createRestaurantDto: CreateRestaurantDto,
-  ): Promise<any> {
-    return await this.restaurantService.create(createRestaurantDto);
+    @Body() body: any,
+    @UploadedFiles() images: Express.Multer.File[],
+  ) {
+    const bannerUrls = await this.uploadService.uploadMultipleImages(images);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    return await this.restaurantService.create({
+      ...body,
+      banners: bannerUrls,
+    });
   }
 
   @Get()
   async fetchAllRestaurant() {
     return await this.restaurantService.fetchAll();
   }
-
-  // @Get(':id')
-  // async fetchRestaurantById(@Param('id') id: ObjectId) {
-  //   return await this.restaurantService.fetchDetailRestaurant(id);
-  // }
 }
