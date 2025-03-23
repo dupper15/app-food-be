@@ -5,6 +5,7 @@ import {
   UsePipes,
   ValidationPipe,
   Get,
+  Param,
 } from '@nestjs/common';
 import { RestaurantService } from './restaurant.service';
 import { CreateRestaurantDto } from './dto/create-restaurant.dto';
@@ -26,8 +27,8 @@ export class RestaurantController {
     return await this.restaurantService.fetchAll();
   }
 
-  // @Get(':id')
-  // async fetchRestaurantById(@Param('id') id: ObjectId) {
-  //   return await this.restaurantService.fetchDetailRestaurant(id);
-  // }
+  @Get(':id')
+  async fetchRestaurantById(@Param('id') id: string) {
+    return await this.restaurantService.fetchDetailRestaurant(id);
+  }
 }
