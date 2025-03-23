@@ -2,24 +2,34 @@ import {
   Controller,
   Post,
   Body,
-  UsePipes,
-  ValidationPipe,
+  UseInterceptors,
+  UploadedFiles,
   Get,
   Param,
 } from '@nestjs/common';
 import { RestaurantService } from './restaurant.service';
-import { CreateRestaurantDto } from './dto/create-restaurant.dto';
+import { FilesInterceptor } from '@nestjs/platform-express';
+import { UploadService } from '../upload/upload.service';
 
 @Controller('restaurants')
 export class RestaurantController {
-  constructor(private readonly restaurantService: RestaurantService) {}
+  constructor(
+    private readonly restaurantService: RestaurantService,
+    private readonly uploadService: UploadService,
+  ) {}
 
   @Post()
-  @UsePipes(new ValidationPipe())
+  @UseInterceptors(FilesInterceptor('images'))
   async createRestaurant(
-    @Body() createRestaurantDto: CreateRestaurantDto,
-  ): Promise<any> {
-    return await this.restaurantService.create(createRestaurantDto);
+    @Body() body: any,
+    @UploadedFiles() images: Express.Multer.File[],
+  ) {
+    const bannerUrls = await this.uploadService.uploadMultipleImages(images);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    return await this.restaurantService.create({
+      ...body,
+      banners: bannerUrls,
+    });
   }
 
   @Get()
@@ -30,5 +40,14 @@ export class RestaurantController {
   @Get(':id')
   async fetchRestaurantById(@Param('id') id: string) {
     return await this.restaurantService.fetchDetailRestaurant(id);
+    
+  @Get('history/:id')
+  async fetchHistoryRestaurantByUserId(@Param('id') id: string) {
+    return await this.restaurantService.fetchHistoryRestaurantByUserId(id);
+  }
+
+  @Get('rcm/:id')
+  async fetchRcmRestaurantByUserId(@Param('id') id: string) {
+    return await this.restaurantService.fetchRcmRestaurantByUserId(id);
   }
 }

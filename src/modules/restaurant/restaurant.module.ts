@@ -6,6 +6,8 @@ import {
 } from 'src/modules/restaurant/restaurant.schema';
 import { RestaurantService } from './restaurant.service';
 import { RestaurantController } from './restaurant.controller';
+import { UploadModule } from '../upload/upload.module';
+import { RestaurantOwnerModule } from '../restaurant-owner/restaurant-owner.module';
 
 @Module({
   imports: [
@@ -15,6 +17,8 @@ import { RestaurantController } from './restaurant.controller';
         schema: RestaurantSchema,
       },
     ]),
+    RestaurantOwnerModule,
+    UploadModule,
   ],
   providers: [RestaurantService],
   controllers: [RestaurantController],

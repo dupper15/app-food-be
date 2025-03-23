@@ -10,6 +10,7 @@ import { JwtModule } from 'src/jwt/jwt.module';
 import { MailModule } from 'src/mailer/mail.module';
 import { CustomerModule } from '../customer/customer.module';
 import { AdminModule } from '../admin/admin.module';
+import { UploadModule } from '../upload/upload.module';
 @Module({
   imports: [
     MongooseModule.forFeature([
@@ -20,6 +21,7 @@ import { AdminModule } from '../admin/admin.module';
     ]),
     JwtModule,
     MailModule,
+    UploadModule,
     forwardRef(() => CustomerModule),
     forwardRef(() => AdminModule),
   ],

@@ -1,4 +1,5 @@
-import { Controller, Post, Body } from '@nestjs/common';import { ReplyService } from './reply.service';
+import { Controller, Post, Body } from '@nestjs/common';
+import { ReplyService } from './reply.service';
 import { Reply } from './reply.schema';
 
 @Controller('reply')

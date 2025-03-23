@@ -30,6 +30,13 @@ export class CreateRestaurantDto {
   @IsNumber()
   @IsOptional()
   total_orders: number;
+  @IsOptional()
+  avatar?: string; // ✅ Chỉ lưu URL sau khi upload
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  banners?: string[];
 
   @IsNotEmpty()
   @IsString()
@@ -38,11 +45,6 @@ export class CreateRestaurantDto {
   @IsOptional()
   @IsNumber()
   rating?: number;
-
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  banner?: Array<string>;
 
   @IsOptional()
   @IsArray()
