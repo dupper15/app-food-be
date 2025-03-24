@@ -1,7 +1,6 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
+import { BadRequestException, Injectable } from '@nestjs/common';import { InjectModel } from '@nestjs/mongoose';
 import { Dish } from './dish.schema';
-import { Model, ObjectId } from 'mongoose';
+import { Model, ObjectId, Types } from 'mongoose';
 import { CreateDishDto } from './dto/createDish.dto';
 import { Restaurant } from '../restaurant/restaurant.schema';
 import { EditToppingDto } from '../topping/dto/editTopping.dto';
@@ -67,7 +66,11 @@ export class DishService {
   }
 
   async fetchAllDishByRestaurant(id: ObjectId): Promise<Dish[]> {
-    return await this.dishModel.find({ restaurant_id: id }).exec();
+    return await this.dishModel
+      .find({
+        restaurant_id: id,
+      })
+      .exec();
   }
 
   async fetchDetailDish(id: ObjectId): Promise<Dish> {
@@ -83,6 +86,7 @@ export class DishService {
     restaurant_id: ObjectId,
     category_id: ObjectId,
   ): Promise<Dish[]> {
+    console.log('sdfdsf');
     const dishByRestaurant = await this.dishModel.find({
       restaurant_id: restaurant_id,
       category_id: category_id,
