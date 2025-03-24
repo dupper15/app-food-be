@@ -8,6 +8,12 @@ export class Voucher {
   @Prop({ required: true, type: Types.ObjectId, ref: 'Restaurant' })
   restaurant_id: string;
 
+  @Prop({ required: true })
+  code: string;
+
+  @Prop({ required: true })
+  name: string;
+
   @Prop({ required: true, min: 0 })
   quantity: number;
 
@@ -16,6 +22,9 @@ export class Voucher {
 
   @Prop({ required: true, min: 0 })
   max: number;
+
+  @Prop({ required: true })
+  start_date: Date;
 
   @Prop({ required: true })
   expire_date: Date;

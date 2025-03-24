@@ -1,4 +1,5 @@
-import { Controller, Post, Get, Param, Body } from '@nestjs/common';import { HistoryService } from './history.service';
+import { Controller, Post, Get, Param, Body } from '@nestjs/common';
+import { HistoryService } from './history.service';
 import { History } from './history.schema';
 import { CreateHistoryDto } from './dto/createHistory';
 
