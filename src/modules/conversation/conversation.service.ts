@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
+import { Injectable } from '@nestjs/common';import { InjectModel } from '@nestjs/mongoose';
 import { Conversation } from './conversation.schema';
 import { Model, Types } from 'mongoose';
 import { Message } from '../message/message.schema';

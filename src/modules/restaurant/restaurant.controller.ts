@@ -37,6 +37,10 @@ export class RestaurantController {
     return await this.restaurantService.fetchAll();
   }
 
+  @Get(':id')
+  async fetchRestaurantById(@Param('id') id: string) {
+    return await this.restaurantService.fetchDetailRestaurant(id);
+    
   @Get('history/:id')
   async fetchHistoryRestaurantByUserId(@Param('id') id: string) {
     return await this.restaurantService.fetchHistoryRestaurantByUserId(id);
