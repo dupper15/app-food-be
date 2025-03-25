@@ -18,23 +18,28 @@ export class CartService {
     private readonly orderItemService: OrderItemService,
   ) {}
   async addDish(createOrderItemDto: CreateOrderItemDto, userId: string) {
+    const user = new Types.ObjectId(userId);
     const newOrderItem =
       await this.orderItemService.createOrderItem(createOrderItemDto);
     const dish = await this.dishModel.findById(createOrderItemDto.dish_id);
     if (!dish) {
       throw new Error('Dish not found');
     }
-    const user = new Types.ObjectId(userId);
-    const restaurantObjectId = dish.restaurant_id;
+
+    const restaurantObjectId = new Types.ObjectId(
+      // eslint-disable-next-line @typescript-eslint/no-base-to-string
+      dish.restaurant_id.toString(),
+    );
     const cart = await this.cartModel.findOne({
-      user_id: user,
-      restaurant_id: dish.restaurant_id,
+      user_id: userId,
+      restaurant_id: restaurantObjectId,
     });
 
     if (cart) {
-      return this.cartModel.updateOne(
-        { _id: cart._id },
+      return this.cartModel.findByIdAndUpdate(
+        cart._id,
         { $push: { order_items: newOrderItem._id } },
+        { new: true },
       );
     } else {
       const newCart = new this.cartModel({
@@ -42,16 +47,18 @@ export class CartService {
         restaurant_id: restaurantObjectId,
         order_items: [newOrderItem._id],
       });
-      return newCart.save();
+      return await newCart.save();
     }
   }
+
   async getOrdersByUserId(userId: string) {
     console.log(userId);
     const user = new Types.ObjectId(userId);
     const carts = await this.cartModel
       .find({ user_id: user })
       .populate('order_items')
-      .populate('restaurant_id');
+      .populate('restaurant_id', 'name')
+      .exec();
     console.log(carts);
     return carts;
   }
