@@ -40,7 +40,7 @@ export class RestaurantController {
   @Get(':id')
   async fetchRestaurantById(@Param('id') id: string) {
     return await this.restaurantService.fetchDetailRestaurant(id);
-    
+  }
   @Get('history/:id')
   async fetchHistoryRestaurantByUserId(@Param('id') id: string) {
     return await this.restaurantService.fetchHistoryRestaurantByUserId(id);
