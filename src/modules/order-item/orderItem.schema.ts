@@ -9,6 +9,9 @@ export class OrderItem {
   quantity: number;
 
   @Prop({ type: [Types.ObjectId], ref: 'Topping', default: [] })
-  topping_array: Types.ObjectId[];
+  topping: Types.ObjectId[];
+
+  @Prop({ type: Types.ObjectId, ref: 'Customer', required: true })
+  user_id: ObjectId;
 }
 export const OrderItemSchema = SchemaFactory.createForClass(OrderItem);

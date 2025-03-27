@@ -6,7 +6,6 @@ import { OrderItem } from '../order-item/orderItem.schema';
 import { OrderItemService } from './../order-item/orderItem.service';
 import { CreateOrderItemDto } from '../order-item/dto/createOrderItem.dto';
 import { InjectModel } from '@nestjs/mongoose';
-
 @Injectable()
 export class CartService {
   constructor(
@@ -19,6 +18,9 @@ export class CartService {
   ) {}
   async addDish(createOrderItemDto: CreateOrderItemDto, userId: string) {
     const user = new Types.ObjectId(userId);
+    createOrderItemDto.user_id = user;
+    const dishId = new Types.ObjectId(createOrderItemDto.dish_id);
+    createOrderItemDto.dish_id = dishId;
     const newOrderItem =
       await this.orderItemService.createOrderItem(createOrderItemDto);
     const dish = await this.dishModel.findById(createOrderItemDto.dish_id);
@@ -52,14 +54,12 @@ export class CartService {
   }
 
   async getOrdersByUserId(userId: string) {
-    console.log(userId);
     const user = new Types.ObjectId(userId);
     const carts = await this.cartModel
       .find({ user_id: user })
       .populate('order_items')
       .populate('restaurant_id', 'name')
       .exec();
-    console.log(carts);
     return carts;
   }
 }
