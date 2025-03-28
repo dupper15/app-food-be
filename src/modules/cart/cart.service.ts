@@ -19,21 +19,22 @@ export class CartService {
   async addDish(createOrderItemDto: CreateOrderItemDto, userId: string) {
     const user = new Types.ObjectId(userId);
     createOrderItemDto.user_id = user;
-    const dishId = new Types.ObjectId(createOrderItemDto.dish_id);
-    createOrderItemDto.dish_id = dishId;
-    const newOrderItem =
-      await this.orderItemService.createOrderItem(createOrderItemDto);
     const dish = await this.dishModel.findById(createOrderItemDto.dish_id);
     if (!dish) {
       throw new Error('Dish not found');
     }
+
+    const dishId = new Types.ObjectId(createOrderItemDto.dish_id);
+    createOrderItemDto.dish_id = dishId;
+    const newOrderItem =
+      await this.orderItemService.createOrderItem(createOrderItemDto);
 
     const restaurantObjectId = new Types.ObjectId(
       // eslint-disable-next-line @typescript-eslint/no-base-to-string
       dish.restaurant_id.toString(),
     );
     const cart = await this.cartModel.findOne({
-      user_id: userId,
+      user_id: user,
       restaurant_id: restaurantObjectId,
     });
 
