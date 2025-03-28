@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { OrderItem } from './orderItem.schema';
 import { Model, ObjectId, Types } from 'mongoose';
 import { CreateOrderItemDto } from './dto/createOrderItem.dto';
+import { EditOrderItemDto } from './dto/editOrderItem.dto';
 @Injectable()
 export class OrderItemService {
   constructor(
@@ -24,7 +25,7 @@ export class OrderItemService {
     return { msg: 'Order item deleted successfully' };
   }
 
-  async editOrderItem(id: ObjectId, editOrderItem: any) {
+  async editOrderItem(id: ObjectId, editOrderItem: EditOrderItemDto) {
     const orderItem = await this.orderItemModel.findByIdAndUpdate(
       id,
       editOrderItem,

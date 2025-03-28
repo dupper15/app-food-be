@@ -12,6 +12,7 @@ import {
 import { OrderItemService } from './orderItem.service';
 import { CreateOrderItemDto } from './dto/createOrderItem.dto';
 import { ObjectId } from 'mongoose';
+import { EditOrderItemDto } from './dto/editOrderItem.dto';
 
 @Controller('order-item')
 export class OrderItemController {
@@ -32,7 +33,7 @@ export class OrderItemController {
   @Put(':id')
   async editOrderItemController(
     @Param('id') id: ObjectId,
-    @Body() editOrderItem: any,
+    @Body() editOrderItem: EditOrderItemDto,
   ) {
     return await this.orderItemService.editOrderItem(id, editOrderItem);
   }
