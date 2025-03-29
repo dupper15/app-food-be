@@ -1,8 +1,6 @@
-import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
-import { Types } from 'mongoose';
+import { IsNotEmpty, IsNumber, IsString } from 'class-validator';import { Types } from 'mongoose';
 export class CreateOrderDto {
   @IsNotEmpty()
-  @IsString()
   array_item: Types.ObjectId[];
 
   @IsNotEmpty()

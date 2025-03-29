@@ -78,4 +78,22 @@ export class ToppingService {
   async getAllTopping(id: ObjectId): Promise<Topping[]> {
     return await this.toppingModel.find({ restaurant_id: id }).exec();
   }
+
+  async getToppingById(id: ObjectId): Promise<Topping> {
+    const topping = await this.toppingModel.findById(id).exec();
+    if (!topping) {
+      throw new BadRequestException('Topping not found');
+    }
+    return topping;
+  }
+
+  async getToppingByIdArray(idArray: ObjectId[]): Promise<Topping[]> {
+    const toppings = await this.toppingModel.find({
+      _id: { $in: idArray },
+    });
+    if (!toppings) {
+      throw new BadRequestException('Topping not found');
+    }
+    return toppings;
+  }
 }

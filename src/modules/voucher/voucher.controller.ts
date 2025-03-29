@@ -27,4 +27,13 @@ export class VoucherController {
   async getDetailVoucher(@Param('id') id: string): Promise<Voucher> {
     return this.voucherService.getVoucherById(id);
   }
+
+  @Post('detail-array')
+  async getDetailVoucherArray(@Body() idArray: string[]): Promise<Voucher[]> {
+    return Promise.all(
+      idArray.map(async (id) => {
+        return this.voucherService.getVoucherById(id);
+      }),
+    );
+  }
 }

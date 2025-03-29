@@ -42,4 +42,14 @@ export class ToppingController {
   async getAllToppingController(@Param('id') id: ObjectId) {
     return await this.toppingService.getAllTopping(id);
   }
+
+  @Get('detail/:id')
+  async getToppingByIdController(@Param('id') id: ObjectId) {
+    return await this.toppingService.getToppingById(id);
+  }
+
+  @Post('detail-array')
+  async getToppingByIdArrayController(@Body() idArray: ObjectId[]) {
+    return await this.toppingService.getToppingByIdArray(idArray);
+  }
 }

@@ -1,5 +1,4 @@
-import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
+import { Module } from '@nestjs/common';import { MongooseModule } from '@nestjs/mongoose';
 import { RestaurantModule } from './modules/restaurant/restaurant.module';
 import { RestaurantOwnerModule } from './modules/restaurant-owner/restaurant-owner.module';
 import * as dotenv from 'dotenv';
@@ -20,6 +19,7 @@ import { HistoryModule } from './modules/history/history.module';
 import { UploadModule } from './modules/upload/upload.module';
 import { CartModule } from './modules/cart/cart.module';
 import { AppController } from './modules/app.controller';
+import { OrderModule } from './modules/order/order.module';
 dotenv.config();
 @Module({
   imports: [
@@ -31,6 +31,7 @@ dotenv.config();
     CustomerModule,
     RestaurantOwnerModule,
     ToppingModule,
+    OrderModule,
     OrderItemModule,
     MessageModule,
     ConversationModule,
