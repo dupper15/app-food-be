@@ -5,10 +5,10 @@ export type VoucherDocument = Voucher & Document;
 
 @Schema({ timestamps: true })
 export class Voucher {
-  @Prop({ required: true, type: Types.ObjectId, ref: 'Restaurant' })
+  @Prop({ required: false, type: Types.ObjectId, ref: 'Restaurant' })
   restaurant_id: string;
 
-  @Prop({ required: true })
+  @Prop({ required: false })
   code: string;
 
   @Prop({ required: true })
@@ -20,8 +20,14 @@ export class Voucher {
   @Prop({ required: true, min: 0 })
   value: number;
 
-  @Prop({ required: true, min: 0 })
+  @Prop({ required: false, min: 0 })
   max: number;
+
+  @Prop({ required: false, min: 0 })
+  min: number;
+
+  @Prop({ required: true })
+  content: string;
 
   @Prop({ required: true })
   start_date: Date;
