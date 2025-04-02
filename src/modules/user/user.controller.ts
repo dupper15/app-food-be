@@ -1,6 +1,8 @@
 import {
   Body,
   Controller,
+  Delete,
+  Param,
   Post,
   Query,
   UsePipes,
@@ -38,5 +40,9 @@ export class UserController<T extends User> {
     @Body('verified_code') verified_code: number,
   ) {
     return await this.userService.verifiedCode(email, verified_code);
+  }
+  @Delete(':id')
+  async deleteUser(@Param('id') id: string) {
+    return await this.userService.deleteUser(id);
   }
 }

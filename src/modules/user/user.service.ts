@@ -168,4 +168,11 @@ export class UserService<T extends User> {
 
     return { message: 'Verified successfully' };
   }
+  async deleteUser(id: string): Promise<{ message: string }> {
+    const user = await this.userModel.findByIdAndDelete(id);
+    if (!user) {
+      throw new HttpException('User not found', 404);
+    }
+    return { message: 'Delete user successfully' };
+  }
 }

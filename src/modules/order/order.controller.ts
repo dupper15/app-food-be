@@ -1,5 +1,4 @@
-import {
-  Body,
+import {  Body,
   Controller,
   Get,
   Param,
@@ -19,6 +18,7 @@ export class OrderController {
   @Post('create')
   @UsePipes(new ValidationPipe())
   async createOrderController(@Body() createOrderDto: CreateOrderDto) {
+    console.log(createOrderDto);
     return await this.orderService.createOrder(createOrderDto);
   }
 

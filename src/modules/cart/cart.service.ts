@@ -60,8 +60,12 @@ export class CartService {
       .find({ user_id: user })
       .populate({
         path: 'order_items',
+        match: { is_paid: false },
         populate: [
-          { path: 'dish_id', select: 'name price image' },
+          {
+            path: 'dish_id',
+            select: 'name price image time isAvailable restaurant_id',
+          },
           { path: 'topping', select: 'name price' },
         ],
       })
