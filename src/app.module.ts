@@ -20,6 +20,7 @@ import { HistoryModule } from './modules/history/history.module';
 import { UploadModule } from './modules/upload/upload.module';
 import { CartModule } from './modules/cart/cart.module';
 import { AppController } from './modules/app.controller';
+import { OrderModule } from './modules/order/order.module';
 dotenv.config();
 @Module({
   imports: [
@@ -44,6 +45,7 @@ dotenv.config();
     HistoryModule,
     UploadModule,
     CartModule,
+    OrderModule,
   ],
   controllers: [AppController],
   providers: [],

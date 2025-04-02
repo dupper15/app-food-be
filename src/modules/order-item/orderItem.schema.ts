@@ -13,5 +13,8 @@ export class OrderItem {
 
   @Prop({ type: Types.ObjectId, ref: 'Customer', required: true })
   user_id: ObjectId;
+
+  @Prop({ required: false, default: false })
+  is_paid: boolean; // true: đã thanh toán, false: chưa thanh toán
 }
 export const OrderItemSchema = SchemaFactory.createForClass(OrderItem);

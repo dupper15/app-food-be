@@ -34,6 +34,9 @@ export class Voucher {
 
   @Prop({ required: true })
   expire_date: Date;
+
+  @Prop({ required: false, default: false })
+  is_exhausted: boolean;
 }
 
 export const VoucherSchema = SchemaFactory.createForClass(Voucher);

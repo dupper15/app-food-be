@@ -26,6 +26,7 @@ export class VoucherService {
         ],
         quantity: { $gt: 0 },
         expire_date: { $gte: new Date() },
+        is_exhausted: false,
       })
       .exec();
   }
