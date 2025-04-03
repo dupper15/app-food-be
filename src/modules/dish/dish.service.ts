@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Dish } from './dish.schema';
-import { Model, ObjectId } from 'mongoose';
+import { Model, ObjectId, Types } from 'mongoose';
 import { CreateDishDto } from './dto/createDish.dto';
 import { Restaurant } from '../restaurant/restaurant.schema';
 import { EditToppingDto } from '../topping/dto/editTopping.dto';
