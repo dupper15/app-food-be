@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';import { InjectModel } from '@nestjs/mongoose';
 import { Dish } from './dish.schema';
-import { Model, ObjectId, Types } from 'mongoose';
+import { Model, ObjectId } from 'mongoose';
 import { CreateDishDto } from './dto/createDish.dto';
 import { Restaurant } from '../restaurant/restaurant.schema';
 import { EditToppingDto } from '../topping/dto/editTopping.dto';
@@ -25,9 +25,10 @@ export class DishService {
   }
   async createDish(createDishDto: CreateDishDto): Promise<Dish> {
     //check restaurant
-    const checkRestaurant = await this.restaurantModel.findById(
-      createDishDto.restaurant_id,
-    );
+    const checkRestaurant = await this.restaurantModel
+      .findById(createDishDto.restaurant_id)
+      .select('_id')
+      .lean();
     if (!checkRestaurant) {
       throw new BadRequestException('Restaurant not found');
     }

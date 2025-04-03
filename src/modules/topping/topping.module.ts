@@ -15,6 +15,7 @@ import { RestaurantModule } from '../restaurant/restaurant.module';
     ]),
     RestaurantModule,
   ],
+  exports: [MongooseModule],
   providers: [ToppingService],
   controllers: [ToppingController],
 })

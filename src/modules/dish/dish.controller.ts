@@ -5,6 +5,8 @@ import {  Body,
   Param,
   Post,
   Put,
+  UploadedFile,
+  UseInterceptors,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
@@ -12,15 +14,28 @@ import { DishService } from './dish.service';
 import { CreateDishDto } from './dto/createDish.dto';
 import { ObjectId } from 'mongoose';
 import { EditDishDto } from './dto/editDish.dto';
+import { UploadService } from '../upload/upload.service';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('dish')
 export class DishController {
-  constructor(private readonly dishService: DishService) {}
+  constructor(
+    private readonly dishService: DishService,
+    private readonly uploadService: UploadService,
+  ) {}
 
   @Post('create')
-  @UsePipes(new ValidationPipe())
-  async createDishController(@Body() createDishDto: CreateDishDto) {
-    return await this.dishService.createDish(createDishDto);
+  @UsePipes(new ValidationPipe({ transform: true }))
+  @UseInterceptors(FileInterceptor('image'))
+  async createDishController(
+    @Body() createDishDto: CreateDishDto,
+    @UploadedFile() imageUpload: Express.Multer.File,
+  ) {
+    const image = await this.uploadService.uploadImage(imageUpload);
+    return await this.dishService.createDish({
+      ...createDishDto,
+      image,
+    });
   }
 
   @Put('edit/:id')
