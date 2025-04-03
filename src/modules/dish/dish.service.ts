@@ -1,4 +1,5 @@
-import { BadRequestException, Injectable } from '@nestjs/common';import { InjectModel } from '@nestjs/mongoose';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
 import { Dish } from './dish.schema';
 import { Model, ObjectId } from 'mongoose';
 import { CreateDishDto } from './dto/createDish.dto';
@@ -32,7 +33,12 @@ export class DishService {
     if (!checkRestaurant) {
       throw new BadRequestException('Restaurant not found');
     }
-    const newDish = new this.dishModel(createDishDto);
+    const newDish = new this.dishModel({
+      ...createDishDto,
+      topping: Array.isArray(createDishDto.topping)
+        ? createDishDto.topping.map((id) => new Types.ObjectId(id))
+        : [],
+    });
     return newDish.save();
   }
 
@@ -67,11 +73,15 @@ export class DishService {
   }
 
   async fetchAllDishByRestaurant(id: ObjectId): Promise<Dish[]> {
-    return await this.dishModel
+    const dishes = await this.dishModel
       .find({
         restaurant_id: id,
       })
+      .populate({ path: 'topping', select: 'name price' })
+      .lean()
       .exec();
+    console.log('test', dishes);
+    return dishes;
   }
 
   async fetchDetailDish(id: ObjectId): Promise<Dish> {
@@ -87,11 +97,14 @@ export class DishService {
     restaurant_id: ObjectId,
     category_id: ObjectId,
   ): Promise<Dish[]> {
-    console.log('sdfdsf');
-    const dishByRestaurant = await this.dishModel.find({
-      restaurant_id: restaurant_id,
-      category_id: category_id,
-    });
+    const dishByRestaurant = await this.dishModel
+      .find({
+        restaurant_id: restaurant_id,
+        category_id: category_id,
+      })
+      .populate('topping', 'name price')
+      .populate('restaurant_id', 'name')
+      .exec();
     if (!dishByRestaurant || dishByRestaurant.length === 0) {
       throw new BadRequestException(
         'No dishes found for this category in the specified restaurant',

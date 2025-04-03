@@ -1,9 +1,9 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { OrderItem } from './orderItem.schema';
-import { Model, ObjectId } from 'mongoose';
+import { Model, ObjectId, Types } from 'mongoose';
 import { CreateOrderItemDto } from './dto/createOrderItem.dto';
-import { Types } from 'mongoose';
+import { EditOrderItemDto } from './dto/editOrderItem.dto';
 @Injectable()
 export class OrderItemService {
   constructor(
@@ -25,49 +25,38 @@ export class OrderItemService {
     return { msg: 'Order item deleted successfully' };
   }
 
-  async increaseQuantity(id: ObjectId): Promise<OrderItem> {
-    const orderItem = await this.orderItemModel.findById(id).exec();
+  async editOrderItem(id: ObjectId, editOrderItem: EditOrderItemDto) {
+    const orderItem = await this.orderItemModel.findByIdAndUpdate(
+      id,
+      editOrderItem,
+      {
+        new: true,
+        runValidators: true,
+      },
+    );
     if (!orderItem) {
       throw new BadRequestException('No found order item');
     }
-    orderItem.quantity += 1;
-    return orderItem.save();
+    return orderItem;
   }
 
-  async decreaseQuantity(id: ObjectId): Promise<any> {
-    const orderItem = await this.orderItemModel
-      .findOneAndUpdate(
-        { _id: id, quantity: { $gt: 1 } },
-        { $inc: { quantity: -1 } },
-        { new: true },
-      )
-      .exec();
-
-    if (orderItem) {
-      return orderItem;
-    }
-    const deletedItem = await this.orderItemModel.findByIdAndDelete(id).exec();
-    if (deletedItem) {
-      return { msg: 'Order item deleted successfully' };
-    }
-
-    throw new BadRequestException('No found order item');
-  }
-  async addTopping(
-    id: ObjectId,
-    list_topping: Types.ObjectId[],
-  ): Promise<OrderItem> {
-    const orderItem = await this.orderItemModel.findById(id).exec();
-    if (!orderItem) {
-      throw new BadRequestException('No found order item');
-    }
-    orderItem.topping_array = list_topping;
-    return orderItem.save();
-  }
   async fetchAllOrderItemByListId(listId: ObjectId[]): Promise<OrderItem[]> {
     const orderItems = await this.orderItemModel
       .find({ _id: { $in: listId } })
       .exec();
     return orderItems;
+  }
+
+  async getOrderItem(userId: ObjectId, dishId: ObjectId): Promise<OrderItem> {
+    const user_id = new Types.ObjectId(userId.toString());
+    const dish_id = new Types.ObjectId(dishId.toString());
+    const orderItem = await this.orderItemModel
+      .findOne({ user_id, dish_id })
+      .populate('topping')
+      .exec();
+    if (!orderItem) {
+      throw new BadRequestException('No found order item');
+    }
+    return orderItem;
   }
 }

@@ -1,8 +1,7 @@
-import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 import { Types } from 'mongoose';
 export class CreateOrderDto {
   @IsNotEmpty()
-  @IsString()
   array_item: Types.ObjectId[];
 
   @IsNotEmpty()
@@ -13,19 +12,24 @@ export class CreateOrderDto {
   @IsString()
   restaurant_id: Types.ObjectId;
 
+  @IsOptional()
   voucher_id: Types.ObjectId[];
 
   @IsNotEmpty()
   @IsNumber()
   total_price: number;
 
+  @IsOptional()
   used_point: number;
 
-  @IsNotEmpty()
+  @IsOptional()
+  note: string;
+
+  @IsOptional()
   @IsNumber()
   time_receive: number;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
   status: string;
 }

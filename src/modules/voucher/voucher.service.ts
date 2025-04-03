@@ -20,9 +20,13 @@ export class VoucherService {
   async fetchAvailableVouchers(restaurantId: string): Promise<Voucher[]> {
     return this.voucherModel
       .find({
-        restaurant_id: restaurantId,
+        $or: [
+          { restaurant_id: restaurantId },
+          { restaurant_id: { $exists: false } },
+        ],
         quantity: { $gt: 0 },
         expire_date: { $gte: new Date() },
+        is_exhausted: false,
       })
       .exec();
   }

@@ -1,5 +1,4 @@
-import {
-  Body,
+import {  Body,
   Controller,
   Delete,
   Get,
@@ -69,5 +68,9 @@ export class CustomersController extends UserController<Customer> {
   @Get(':id/address')
   async getAddresses(@Param('id') userId: string) {
     return this.customerService.getAddresses(userId);
+  }
+  @Get(':id/points')
+  async getPoints(@Param('id') userId: string) {
+    return this.customerService.getPoints(userId);
   }
 }
