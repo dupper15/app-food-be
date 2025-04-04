@@ -58,7 +58,17 @@ export class CartService {
     const user = new Types.ObjectId(userId);
     const carts = await this.cartModel
       .find({ user_id: user })
-      .populate('order_items')
+      .populate({
+        path: 'order_items',
+        match: { is_paid: false },
+        populate: [
+          {
+            path: 'dish_id',
+            select: 'name price image time isAvailable restaurant_id',
+          },
+          { path: 'topping', select: 'name price' },
+        ],
+      })
       .populate('restaurant_id', 'name')
       .exec();
     return carts;

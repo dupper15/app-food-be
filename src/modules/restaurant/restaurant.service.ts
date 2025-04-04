@@ -42,6 +42,16 @@ export class RestaurantService {
     return restaurant;
   }
 
+  async fetchDetailRestaurantByOwner(id: string): Promise<Restaurant> {
+    const restaurant = await this.restaurantModel
+      .findOne({ owner_id: id })
+      .exec();
+    if (!restaurant) {
+      throw new NotFoundException(`Restaurant with ID ${id} not found`);
+    }
+    return restaurant;
+  }
+
   async fetchHistoryRestaurantByUserId(id: string): Promise<Restaurant[]> {
     return this.restaurantModel
       .find()

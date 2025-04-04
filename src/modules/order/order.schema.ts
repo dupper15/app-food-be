@@ -17,13 +17,16 @@ export class Order {
   @Prop({ required: true })
   total_price: number;
 
-  @Prop({ default: 0 })
+  @Prop({ default: 0 }) // đơn 100k được 1 điểm, 1đ => 1k
   used_point: number;
 
-  @Prop({ required: true })
+  @Prop({ required: false })
+  note: string;
+
+  @Prop({ required: false, default: -1 })
   time_receive: number;
 
-  @Prop({ required: true })
+  @Prop({ required: false, default: 'Pending' }) // pending, received, preparing, ready, completed, canceled
   status: string;
 }
 export const OrderSchema = SchemaFactory.createForClass(Order);

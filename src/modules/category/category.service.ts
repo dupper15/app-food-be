@@ -33,7 +33,7 @@ export class CategoryService {
     const categories = await this.categoryModel
       .find({ isDeleted: false })
       .select('_id name')
-      .exec();
+      .lean();
     return categories;
   }
 

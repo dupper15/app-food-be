@@ -1,4 +1,5 @@
-import { Module } from '@nestjs/common';import { MongooseModule } from '@nestjs/mongoose';
+import { Module } from '@nestjs/common';
+import { MongooseModule } from '@nestjs/mongoose';
 import { Voucher, VoucherSchema } from './voucher.schema';
 import { VoucherService } from './voucher.service';
 import { VoucherController } from './voucher.controller';
@@ -9,6 +10,6 @@ import { VoucherController } from './voucher.controller';
   ],
   controllers: [VoucherController],
   providers: [VoucherService],
-  exports: [VoucherService],
+  exports: [VoucherService, MongooseModule],
 })
 export class VoucherModule {}

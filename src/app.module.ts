@@ -45,6 +45,7 @@ dotenv.config();
     HistoryModule,
     UploadModule,
     CartModule,
+    OrderModule,
   ],
   controllers: [AppController],
   providers: [],

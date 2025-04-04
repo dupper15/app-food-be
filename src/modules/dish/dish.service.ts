@@ -26,9 +26,10 @@ export class DishService {
   }
   async createDish(createDishDto: CreateDishDto): Promise<Dish> {
     //check restaurant
-    const checkRestaurant = await this.restaurantModel.findById(
-      createDishDto.restaurant_id,
-    );
+    const checkRestaurant = await this.restaurantModel
+      .findById(createDishDto.restaurant_id)
+      .select('_id')
+      .lean();
     if (!checkRestaurant) {
       throw new BadRequestException('Restaurant not found');
     }

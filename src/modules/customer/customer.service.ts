@@ -115,4 +115,11 @@ export class CustomerService extends UserService<Customer> {
     }
     return customer.address;
   }
+  async getPoints(userId: string) {
+    const customer = await this.customerModel.findById(userId);
+    if (!customer) {
+      throw new BadRequestException('User not found');
+    }
+    return customer.total_points;
+  }
 }
