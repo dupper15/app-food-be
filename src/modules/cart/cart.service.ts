@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { Cart } from './cart.schema';
 import { Model, Types } from 'mongoose';
 import { Dish } from '../dish/dish.schema';
@@ -72,5 +72,35 @@ export class CartService {
       .populate('restaurant_id', 'name')
       .exec();
     return carts;
+  }
+  async deleteOrderItem(userId: string, orderItemId: string) {
+    const cart = await this.cartModel.findOne({
+      user_id: new Types.ObjectId(userId),
+      order_items: { $in: [new Types.ObjectId(orderItemId)] },
+    });
+
+    if (!cart) {
+      throw new Error('Cart not found');
+    }
+    const deletedOrderItem =
+      await this.orderItemModel.findByIdAndDelete(orderItemId);
+    if (!deletedOrderItem) {
+      throw new Error('Order item not found');
+    }
+    await this.cartModel.updateOne(
+      { _id: cart._id },
+      { $pull: { order_items: new Types.ObjectId(orderItemId) } },
+    );
+
+    const updatedCart = await this.cartModel.findById(cart._id);
+    if (!updatedCart) {
+      throw new BadRequestException('Cart not found after update');
+    }
+
+    if (updatedCart.order_items.length === 0) {
+      await this.cartModel.findByIdAndDelete(cart._id);
+    }
+
+    return { msg: 'Order item deleted successfully' };
   }
 }
