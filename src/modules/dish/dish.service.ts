@@ -80,13 +80,15 @@ export class DishService {
       .populate({ path: 'topping', select: 'name price' })
       .lean()
       .exec();
-    console.log('test', dishes);
     return dishes;
   }
 
   async fetchDetailDish(id: ObjectId): Promise<Dish> {
     //check dish
-    const checkDish = await this.dishModel.findById(id);
+    const checkDish = await this.dishModel
+      .findById(id)
+      .populate('topping', 'name price')
+      .populate('restaurant_id', 'name');
     if (!checkDish) {
       throw new BadRequestException('Dish not found');
     }
