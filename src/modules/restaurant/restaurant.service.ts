@@ -1,5 +1,4 @@
-import { InjectModel } from '@nestjs/mongoose';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';import { Injectable, NotFoundException } from '@nestjs/common';
 import { Model } from 'mongoose';
 import { Restaurant } from 'src/modules/restaurant/restaurant.schema';
 import { CreateRestaurantDto } from './dto/create-restaurant.dto';
@@ -60,6 +59,30 @@ export class RestaurantService {
   }
 
   async fetchRcmRestaurantByUserId(id: string): Promise<Restaurant[]> {
+    return this.restaurantModel
+      .find()
+      .populate({ path: 'owner_id', select: 'avatar phone' })
+      .exec();
+  }
+  async fetchForYouRestaurantByUserId(id: string): Promise<Restaurant[]> {
+    return this.restaurantModel
+      .find()
+      .populate({ path: 'owner_id', select: 'avatar phone' })
+      .exec();
+  }
+  async fetchNearRestaurantByUserId(id: string): Promise<Restaurant[]> {
+    return this.restaurantModel
+      .find()
+      .populate({ path: 'owner_id', select: 'avatar phone' })
+      .exec();
+  }
+  async fetchMultipleDealsRestaurant(): Promise<Restaurant[]> {
+    return this.restaurantModel
+      .find()
+      .populate({ path: 'owner_id', select: 'avatar phone' })
+      .exec();
+  }
+  async fetchMultipleBuyerRestaurant(): Promise<Restaurant[]> {
     return this.restaurantModel
       .find()
       .populate({ path: 'owner_id', select: 'avatar phone' })

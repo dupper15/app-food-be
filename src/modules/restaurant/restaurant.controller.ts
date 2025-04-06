@@ -36,7 +36,14 @@ export class RestaurantController {
   async fetchAllRestaurant() {
     return await this.restaurantService.fetchAll();
   }
-
+  @Get('multiple-deals')
+  async fetchMultipleDealsRestaurant() {
+    return await this.restaurantService.fetchMultipleDealsRestaurant();
+  }
+  @Get('multiple-buyers')
+  async fetchMultipleBuyerRestaurant() {
+    return await this.restaurantService.fetchMultipleBuyerRestaurant();
+  }
   @Get(':id')
   async fetchRestaurantById(@Param('id') id: string) {
     return await this.restaurantService.fetchDetailRestaurant(id);
@@ -52,8 +59,16 @@ export class RestaurantController {
     return await this.restaurantService.fetchHistoryRestaurantByUserId(id);
   }
 
-  @Get('rcm/:id')
+  @Get('recommended/:id')
   async fetchRcmRestaurantByUserId(@Param('id') id: string) {
     return await this.restaurantService.fetchRcmRestaurantByUserId(id);
+  }
+  @Get('for-you/:id')
+  async fetchForYouRestaurantByUserId(@Param('id') id: string) {
+    return await this.restaurantService.fetchForYouRestaurantByUserId(id);
+  }
+  @Get('nearby/:id')
+  async fetchNearRestaurantByUserId(@Param('id') id: string) {
+    return await this.restaurantService.fetchNearRestaurantByUserId(id);
   }
 }
