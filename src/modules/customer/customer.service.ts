@@ -84,9 +84,20 @@ export class CustomerService extends UserService<Customer> {
     return customer.save();
   }
   async getFavoriteRestaurants(userId: string) {
-    const customer = await this.customerModel
-      .findById(userId)
-      .populate('favorite_restaurants');
+    const customer = await this.customerModel.findById(userId).populate({
+      path: 'favorite_restaurants',
+      populate: {
+        path: 'owner_id',
+        select: 'avatar',
+      },
+    });
+    if (!customer) {
+      throw new BadRequestException('User not found');
+    }
+    return customer.favorite_restaurants;
+  }
+  async getFavoriteRestaurantIds(userId: string) {
+    const customer = await this.customerModel.findById(userId);
     if (!customer) {
       throw new BadRequestException('User not found');
     }
