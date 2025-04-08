@@ -1,36 +1,33 @@
-import { IsMongoId, IsNumber, IsOptional, IsString } from 'class-validator';
-import { Types } from 'mongoose';
+import { Type } from 'class-transformer';
+import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 export class EditDishDto {
-  @IsOptional()
+  @IsNotEmpty()
   @IsString()
-  @IsMongoId()
-  restaurant_id: Types.ObjectId;
+  restaurant_id: string;
 
-  @IsOptional()
+  @IsNotEmpty()
   @IsString()
-  @IsMongoId()
-  category_id: Types.ObjectId;
+  category_id: string;
 
-  @IsOptional()
+  @IsNotEmpty()
   @IsString()
   name: string;
 
-  @IsOptional()
+  @IsNotEmpty()
   @IsString()
   introduce: string;
 
   @IsOptional()
   @IsString()
-  image: string;
+  image?: string;
 
-  @IsOptional()
-  @IsNumber()
-  time: number;
-
-  @IsOptional()
+  @Type(() => Number)
   @IsNumber()
   price: number;
 
-  @IsOptional()
-  topping: Types.ObjectId[];
+  @Type(() => Number)
+  @IsNumber()
+  time: number;
+
+  topping: string[];
 }

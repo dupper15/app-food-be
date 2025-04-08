@@ -4,7 +4,7 @@ import { Dish } from './dish.schema';
 import { Model, ObjectId, Types } from 'mongoose';
 import { CreateDishDto } from './dto/createDish.dto';
 import { Restaurant } from '../restaurant/restaurant.schema';
-import { EditToppingDto } from '../topping/dto/editTopping.dto';
+import { EditDishDto } from './dto/editDish.dto';
 
 @Injectable()
 export class DishService {
@@ -42,11 +42,11 @@ export class DishService {
     return newDish.save();
   }
 
-  async editDish(id: ObjectId, editDishDto: EditToppingDto): Promise<Dish> {
+  async editDish(id: string, editDishDto: EditDishDto): Promise<Dish> {
     const updatedDish = await this.dishModel.findByIdAndUpdate(
       id,
       editDishDto,
-      { new: true, runValidators: true },
+      { new: true },
     );
 
     //check updated dish

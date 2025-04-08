@@ -15,13 +15,13 @@ export class Dish {
   introduce: string;
 
   @Prop({ required: true })
-  time: string;
+  time: number;
 
   @Prop({ required: true })
   image: string;
 
   @Prop({ required: true })
-  price: string;
+  price: number;
 
   @Prop({ type: [Types.ObjectId], ref: 'Topping', default: [] })
   topping: Types.ObjectId[];

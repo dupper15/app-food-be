@@ -40,12 +40,21 @@ export class DishController {
   }
 
   @Put('edit/:id')
-  @UsePipes(new ValidationPipe())
+  @UsePipes(new ValidationPipe({ transform: true }))
+  @UseInterceptors(FileInterceptor('image'))
   async editDishController(
-    @Param('id') id: ObjectId,
+    @Param('id') id: string,
     @Body() editDishDto: EditDishDto,
+    @UploadedFile() imageUpload: Express.Multer.File,
   ) {
-    return await this.dishService.editDish(id, editDishDto);
+    const updateData = { ...editDishDto };
+
+    if (imageUpload) {
+      const uploadImageUrl = await this.uploadService.uploadImage(imageUpload);
+      updateData.image = uploadImageUrl;
+    }
+
+    return await this.dishService.editDish(id, updateData);
   }
 
   @Delete('delete/:id')
