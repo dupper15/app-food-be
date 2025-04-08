@@ -1,4 +1,5 @@
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 export class CreateDishDto {
   @IsNotEmpty()
   @IsString()
@@ -20,11 +21,13 @@ export class CreateDishDto {
   @IsString()
   image?: string;
 
-  @IsNotEmpty()
-  time: string;
+  @Type(() => Number)
+  @IsNumber()
+  price: number;
 
-  @IsNotEmpty()
-  price: string;
+  @Type(() => Number)
+  @IsNumber()
+  time: number;
 
   topping: string[];
 }
