@@ -52,6 +52,10 @@ export class CustomersController extends UserController<Customer> {
   async getFavoriteRestaurants(@Param('id') userId: string) {
     return this.customerService.getFavoriteRestaurants(userId);
   }
+  @Get(':id/favorite-restaurant-ids')
+  async getFavoriteRestaurantIds(@Param('id') userId: string) {
+    return this.customerService.getFavoriteRestaurantIds(userId);
+  }
   @Post(':id/address')
   async addAddress(
     @Param('id') userId: string,
