@@ -1,10 +1,10 @@
-import {
-  Body,
+import {  Body,
   Controller,
   Delete,
   Get,
   Param,
   Post,
+  Put,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
@@ -77,5 +77,13 @@ export class CustomersController extends UserController<Customer> {
   @Get(':id/points')
   async getPoints(@Param('id') userId: string) {
     return this.customerService.getPoints(userId);
+  }
+  @Get(':id')
+  async getCustomerInfo(@Param('id') userId: string) {
+    return this.customerService.getCustomerInfo(userId);
+  }
+  @Put(':id')
+  async editCustomerInfo(@Param('id') userId: string, @Body() data: any) {
+    return this.customerService.editCustomerInfo(userId, data.editUser);
   }
 }

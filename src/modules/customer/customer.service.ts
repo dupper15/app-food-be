@@ -133,4 +133,22 @@ export class CustomerService extends UserService<Customer> {
     }
     return customer.total_points;
   }
+  async getCustomerInfo(userId: string) {
+    const customer = await this.customerModel.findById(userId);
+    if (!customer) {
+      throw new BadRequestException('User not found');
+    }
+    return customer;
+  }
+  async editCustomerInfo(userId: string, data: any) {
+    console.log('data', data);
+    const customer = await this.customerModel.findByIdAndUpdate(userId, data, {
+      new: true,
+    });
+    if (!customer) {
+      throw new BadRequestException('User not found');
+    }
+    await customer.save();
+    return customer;
+  }
 }

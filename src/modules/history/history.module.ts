@@ -1,4 +1,5 @@
-import { Module } from '@nestjs/common';import { MongooseModule } from '@nestjs/mongoose';
+import { Module } from '@nestjs/common';
+import { MongooseModule } from '@nestjs/mongoose';
 import { History, HistorySchema } from './history.schema';
 import { HistoryService } from './history.service';
 import { HistoryController } from './history.controller';
