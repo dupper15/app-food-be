@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Delete,
+  Get,
   Param,
   Post,
   Query,
@@ -44,5 +45,9 @@ export class UserController<T extends User> {
   @Delete(':id')
   async deleteUser(@Param('id') id: string) {
     return await this.userService.deleteUser(id);
+  }
+  @Get(':id')
+  async fetchDetailUser(@Param('id') id: string) {
+    return await this.userService.fetchDetailUser(id);
   }
 }

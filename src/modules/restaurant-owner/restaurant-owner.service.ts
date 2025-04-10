@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { RestaurantOwner } from './restaurant-owner.schema';
 import { UserService } from '../user/user.service';
@@ -82,5 +86,12 @@ export class RestaurantOwnerService extends UserService<RestaurantOwner> {
     }
 
     return updatedRestaurantOwner;
+  }
+  async fetchDetailOwner(id: string): Promise<RestaurantOwner> {
+    const owner = await this.restaurantOwnerModel.findById(id);
+    if (!owner) {
+      throw new NotFoundException('User not found');
+    }
+    return owner;
   }
 }

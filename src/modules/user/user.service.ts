@@ -1,4 +1,8 @@
-import { BadRequestException, HttpException, Injectable } from '@nestjs/common';
+import {  BadRequestException,
+  HttpException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from './user.schema';
 import { Model } from 'mongoose';
@@ -174,5 +178,12 @@ export class UserService<T extends User> {
       throw new HttpException('User not found', 404);
     }
     return { message: 'Delete user successfully' };
+  }
+  async fetchDetailUser(id: string): Promise<User> {
+    const user = await this.userModel.findById(id);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return user;
   }
 }

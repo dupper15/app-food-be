@@ -39,6 +39,7 @@ export class RestaurantOwnerController extends UserController<RestaurantOwner> {
     @Body() data: any,
     @UploadedFile() images: Express.Multer.File,
   ) {
+    console.log(data, images);
     if (images) {
       const avatar = await this.uploadService.uploadImage(images);
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
