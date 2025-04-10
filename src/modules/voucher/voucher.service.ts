@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Voucher, VoucherDocument } from './voucher.schema';
+import { CreateVoucherDto } from './dto/create-voucher.dto';
+import { EditVoucherDto } from './dto/edit-voucher.dto';
 
 @Injectable()
 export class VoucherService {
@@ -9,8 +11,16 @@ export class VoucherService {
     @InjectModel(Voucher.name) private voucherModel: Model<VoucherDocument>,
   ) {}
 
-  async createVoucher(data: Partial<Voucher>): Promise<Voucher> {
+  async createVoucher(data: CreateVoucherDto): Promise<Voucher> {
     return this.voucherModel.create(data);
+  }
+
+  async editVoucher(id: string, data: EditVoucherDto): Promise<Voucher | null> {
+    return await this.voucherModel.findByIdAndUpdate(id, data, { new: true });
+  }
+
+  async deleteVoucher(id: string): Promise<Voucher | null> {
+    return await this.voucherModel.findByIdAndDelete(id);
   }
 
   async fetchSystemVouchers(): Promise<Voucher[]> {
@@ -29,6 +39,10 @@ export class VoucherService {
         is_exhausted: false,
       })
       .exec();
+  }
+
+  async fetchAllVoucher(restaurantId: string): Promise<Voucher[]> {
+    return this.voucherModel.find({ restaurant_id: restaurantId });
   }
 
   async getVoucherById(id: string): Promise<Voucher> {
