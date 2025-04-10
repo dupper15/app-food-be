@@ -35,7 +35,7 @@ export class Voucher {
   @Prop({ required: true })
   expire_date: Date;
 
-  @Prop({ required: false, default: false })
+  @Prop({ required: true, default: false })
   is_exhausted: boolean;
 }
 
