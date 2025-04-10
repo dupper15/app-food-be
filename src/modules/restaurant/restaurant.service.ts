@@ -1,9 +1,11 @@
-import { InjectModel } from '@nestjs/mongoose';import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Model } from 'mongoose';
 import { Restaurant } from 'src/modules/restaurant/restaurant.schema';
 import { CreateRestaurantDto } from './dto/create-restaurant.dto';
 import { RestaurantOwner } from '../restaurant-owner/restaurant-owner.schema';
 import { UploadService } from '../upload/upload.service';
+import { EditRestaurantDto } from './dto/edit-restaurant.dto';
 
 @Injectable()
 export class RestaurantService {
@@ -27,6 +29,40 @@ export class RestaurantService {
     });
 
     return newRestaurant.save();
+  }
+
+  async edit(id: string, editData: EditRestaurantDto) {
+    const restaurant = await this.restaurantModel.findByIdAndUpdate(
+      id,
+      editData,
+      { new: true },
+    );
+
+    return restaurant;
+  }
+
+  async findById(id: string): Promise<Restaurant | null> {
+    return this.restaurantModel.findById(id).exec();
+  }
+
+  async deleteBanner(id: string, imageUrl: string): Promise<Restaurant | null> {
+    const restaurant = await this.restaurantModel.findById(id);
+
+    if (!restaurant) {
+      throw new NotFoundException('Restaurant not found');
+    }
+
+    const updatedBanners = restaurant.banners.filter(
+      (bannerUrl: string) => bannerUrl !== imageUrl,
+    );
+
+    const updatedRestaurant = await this.restaurantModel.findByIdAndUpdate(
+      id,
+      { banners: updatedBanners },
+      { new: true },
+    );
+
+    return updatedRestaurant;
   }
 
   async fetchAll(): Promise<Restaurant[]> {

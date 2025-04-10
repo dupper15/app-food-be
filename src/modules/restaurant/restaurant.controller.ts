@@ -6,10 +6,12 @@ import {
   UploadedFiles,
   Get,
   Param,
+  Put,
 } from '@nestjs/common';
 import { RestaurantService } from './restaurant.service';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { UploadService } from '../upload/upload.service';
+import { EditRestaurantDto } from './dto/edit-restaurant.dto';
 
 @Controller('restaurants')
 export class RestaurantController {
@@ -30,6 +32,42 @@ export class RestaurantController {
       ...body,
       banners: bannerUrls,
     });
+  }
+
+  @Put('edit/:id')
+  @UseInterceptors(FilesInterceptor('banners'))
+  async editRestaurant(
+    @Param('id') id: string,
+    @Body() body: EditRestaurantDto,
+    @UploadedFiles() banners: Express.Multer.File[],
+  ) {
+    const updateData = { ...body };
+
+    let bannersRemaining: string[] = [];
+
+    if (Array.isArray(body.bannersRemaining)) {
+      bannersRemaining = body.bannersRemaining;
+    } else if (typeof body.bannersRemaining === 'string') {
+      // Trường hợp chỉ có 1 image => vẫn cần đưa về mảng
+      bannersRemaining = [body.bannersRemaining];
+    }
+
+    let newBannerUrls: string[] = [];
+    if (banners && banners.length > 0) {
+      newBannerUrls = await this.uploadService.uploadMultipleImages(banners);
+    }
+
+    updateData.banners = [...bannersRemaining, ...newBannerUrls];
+
+    return await this.restaurantService.edit(id, updateData);
+  }
+
+  @Put('delete-banner/:id')
+  async deleteBannerRestaurant(
+    @Param('id') id: string,
+    @Body() imageUrl: string,
+  ) {
+    return await this.restaurantService.deleteBanner(id, imageUrl);
   }
 
   @Get()
