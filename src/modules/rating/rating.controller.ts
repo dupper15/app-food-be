@@ -1,4 +1,11 @@
-import { Controller, Post, Get, Delete, Param, Body } from '@nestjs/common';
+import {  Controller,
+  Post,
+  Get,
+  Delete,
+  Param,
+  Body,
+  Patch,
+} from '@nestjs/common';
 import { RatingService } from './rating.service';
 import { Rating } from './rating.schema';
 import { CreateRatingDto } from './dto/createRating';
@@ -10,6 +17,19 @@ export class RatingController {
   @Post('create')
   async createRating(@Body() data: CreateRatingDto): Promise<Rating> {
     return this.ratingService.createRating(data);
+  }
+
+  @Get('order/:id')
+  async fetchRatingByOrderId(@Param('id') order_id: string): Promise<Rating> {
+    return this.ratingService.fetchRatingByOrderId(order_id);
+  }
+
+  @Patch('update/:id')
+  async updateRating(
+    @Param('id') id: string,
+    @Body() data: Partial<CreateRatingDto>,
+  ): Promise<Rating> {
+    return this.ratingService.updateRating(id, data);
   }
 
   @Get('restaurant/:id')
