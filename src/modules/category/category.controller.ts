@@ -36,4 +36,9 @@ export class CategoryController {
   async deleteCategoryController(@Param('id') id: ObjectId) {
     return await this.categoryService.deleteCategory(id);
   }
+
+  @Get('fetch-restaurant-have-category/:id')
+  async fetchRestaurantHaveCategory(@Param('id') id: ObjectId): Promise<any> {
+    return await this.categoryService.fetchRestaurantHaveCategory(id);
+  }
 }
