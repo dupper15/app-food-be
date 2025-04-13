@@ -6,5 +6,8 @@ export class Category {
 
   @Prop({ default: false, required: false })
   isDeleted: boolean;
+
+  @Prop({ required: false })
+  image: boolean;
 }
 export const CategorySchema = SchemaFactory.createForClass(Category);
