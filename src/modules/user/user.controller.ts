@@ -5,6 +5,7 @@ import {
   Get,
   Param,
   Post,
+  Put,
   Query,
   UsePipes,
   ValidationPipe,
@@ -49,5 +50,9 @@ export class UserController<T extends User> {
   @Get(':id')
   async fetchDetailUser(@Param('id') id: string) {
     return await this.userService.fetchDetailUser(id);
+  }
+  @Put('change-password/:id')
+  async changePassword(@Param('id') id: string, @Body() data: any) {
+    return await this.userService.changePassword(id, data);
   }
 }
