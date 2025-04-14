@@ -26,17 +26,15 @@ export class DishController {
   ) {}
 
   @Post('create')
-  @UsePipes(new ValidationPipe({ transform: true }))
   @UseInterceptors(FileInterceptor('image'))
   async createDishController(
     @Body() createDishDto: CreateDishDto,
     @UploadedFile() imageUpload: Express.Multer.File,
   ) {
+    console.log(imageUpload);
     const image = await this.uploadService.uploadImage(imageUpload);
-    return await this.dishService.createDish({
-      ...createDishDto,
-      image,
-    });
+    createDishDto.image = image;
+    return await this.dishService.createDish(createDishDto);
   }
 
   @Put('edit/:id')
@@ -68,7 +66,7 @@ export class DishController {
   }
 
   @Get('fetchall-dish-by-restaurant/:id')
-  async fetchAllDishByRestaurantController(@Param('id') id: ObjectId) {
+  async fetchAllDishByRestaurantController(@Param('id') id: string) {
     return await this.dishService.fetchAllDishByRestaurant(id);
   }
 
