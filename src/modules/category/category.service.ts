@@ -32,9 +32,14 @@ export class CategoryService {
   async fetchAllCategory() {
     const categories = await this.categoryModel
       .find({ isDeleted: false })
-      .select('_id name')
+      .select('_id name isDeleted image')
       .lean();
-    return categories;
+    const sorted = [
+      ...categories.filter((c) => c.name !== 'Món khác'),
+      ...categories.filter((c) => c.name === 'Món khác'),
+    ];
+
+    return sorted;
   }
 
   async fetchAllCategoryByRestaurant(id: ObjectId): Promise<Category[]> {
@@ -69,5 +74,34 @@ export class CategoryService {
       throw new BadRequestException('Category not found');
     }
     return { msg: 'Category deleted successfully' };
+  }
+
+  async fetchRestaurantHaveCategory(id: ObjectId) {
+    const dishes = await this.dishModel
+      .find({ category_id: id })
+      .populate({
+        path: 'restaurant_id',
+        populate: {
+          path: 'owner_id',
+          select: 'avatar',
+        },
+      })
+      .exec();
+
+    const restaurantSet = new Set<string>();
+    const restaurantArray: any[] = [];
+
+    for (const dish of dishes) {
+      const restaurantTmp: any = dish.restaurant_id;
+
+      const restaurantIdStr: string = restaurantTmp._id.toString();
+
+      if (!restaurantSet.has(restaurantIdStr)) {
+        restaurantSet.add(restaurantIdStr);
+        restaurantArray.push(restaurantTmp);
+      }
+    }
+
+    return restaurantArray;
   }
 }
