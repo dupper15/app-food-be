@@ -97,7 +97,6 @@ export class OrderService {
     if (!order) {
       throw new BadRequestException('No found order');
     }
-    order.status = 'Pending';
     const newOrder = new this.orderModel(order);
     return newOrder.save();
   }
