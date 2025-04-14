@@ -186,4 +186,44 @@ export class UserService<T extends User> {
     }
     return user;
   }
+  async changePassword(id: string, data): Promise<{ message: string }> {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const { currentPassword, newPassword, confirmPassword } = data;
+    if (newPassword !== confirmPassword) {
+      throw new BadRequestException('New password not match! Please try again');
+    }
+    const userRoles: (
+      | Model<Admin>
+      | Model<Customer>
+      | Model<RestaurantOwner>
+    )[] = [this.adminModel, this.customerModel, this.restaurantOwnerModel];
+
+    let account: any = null;
+
+    for (const model of userRoles) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      account = await (model as Model<User>).findById(id);
+      if (account) break;
+    }
+
+    if (!account) {
+      throw new BadRequestException('Account not found');
+    }
+
+    const isPasswordMatch = await bcrypt.compare(
+      currentPassword,
+      account.password,
+    );
+    if (!isPasswordMatch) {
+      throw new BadRequestException(
+        'Current password not match! Please try again',
+      );
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    account.password = hashedPassword;
+    await account.save();
+
+    return { message: 'Change password successfully' };
+  }
 }
