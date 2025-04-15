@@ -11,7 +11,4 @@ export class AddToppingDto {
   @IsNotEmpty()
   @IsNumber()
   price: number;
-
-  @IsNotEmpty()
-  image: string;
 }

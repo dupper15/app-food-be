@@ -15,7 +15,7 @@ export class ToppingService {
   ) {}
 
   async addTopping(addToppingDto: AddToppingDto): Promise<Topping> {
-    const { restaurant_id, name, price, image } = addToppingDto;
+    const { restaurant_id, name, price } = addToppingDto;
 
     //check restaurant
     const checkRestaurant = await this.restaurantModel.findById(restaurant_id);
@@ -27,7 +27,6 @@ export class ToppingService {
       restaurant_id,
       name,
       price,
-      image,
     });
 
     try {
@@ -42,22 +41,10 @@ export class ToppingService {
   async editTopping(
     id: ObjectId,
     editToppingDto: EditToppingDto,
-  ): Promise<Topping> {
-    const { name, price, image } = editToppingDto;
-
-    // find topping to update
-    const updatedTopping = await this.toppingModel.findByIdAndUpdate(
-      id,
-      { name, price, image },
-      { new: true, runValidators: true },
-    );
-
-    //check updated topping
-    if (!updatedTopping) {
-      throw new BadRequestException('Topping not found');
-    }
-
-    return updatedTopping;
+  ): Promise<Topping | null> {
+    return await this.toppingModel.findByIdAndUpdate(id, editToppingDto, {
+      new: true,
+    });
   }
 
   async deleteTopping(id: ObjectId): Promise<{ msg: string }> {
