@@ -7,8 +7,4 @@ export class EditToppingDto {
   @IsNotEmpty()
   @IsNumber({}, { message: 'Price must be a number' })
   price: number;
-
-  @IsNotEmpty()
-  @IsString()
-  image: string;
 }
