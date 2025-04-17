@@ -1,4 +1,5 @@
-import { Controller, Post, Body, Get, Query } from '@nestjs/common';import { ConversationService } from './conversation.service';
+import { Controller, Post, Body, Get, Query, Param } from '@nestjs/common';
+import { ConversationService } from './conversation.service';
 import { SendMessageDto } from './dto/send-message.dto';
 import { Conversation } from './conversation.schema';
 
@@ -30,5 +31,13 @@ export class ConversationController {
       user1,
       user2,
     );
+  }
+  @Post('chat-bot')
+  async createChatBotMessage(@Body() sendMessage: any): Promise<any> {
+    return await this.conversationService.sendChatBotMessage(sendMessage);
+  }
+  @Get('chat-bot/:id')
+  async getChatBotMessage(@Param('id') id: string): Promise<any> {
+    return await this.conversationService.getChatBotMessage(id);
   }
 }

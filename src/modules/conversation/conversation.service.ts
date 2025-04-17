@@ -1,8 +1,10 @@
-import { Injectable } from '@nestjs/common';import { InjectModel } from '@nestjs/mongoose';
+import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
 import { Conversation } from './conversation.schema';
 import { Model, Types } from 'mongoose';
 import { Message } from '../message/message.schema';
 import { SendMessageDto } from './dto/send-message.dto';
+import { generateText } from 'src/chatbot/chatbot';
 
 @Injectable()
 export class ConversationService {
@@ -142,5 +144,35 @@ export class ConversationService {
       console.error('Error fetching conversation:', error);
       throw new Error('Failed to get conversation details');
     }
+  }
+  async sendChatBotMessage(sendMessage: SendMessageDto): Promise<any> {
+    const { content, image, receiver_id, sender_id } = sendMessage;
+    const newMessage = new this.messageModel({
+      sender_id,
+      receiver_id,
+      content,
+      image,
+    });
+    await newMessage.save();
+    const prompt =
+      'Bạn là một trợ lý ẩm thực thân thiện của nền tảng đặt đồ ăn. Hãy trả lời câu hỏi sau theo hướng gợi ý món ăn ngon, giới thiệu nhà hàng phù hợp, hoặc chia sẻ thông tin thú vị liên quan đến ẩm thực. Luôn giữ giọng điệu thân thiện, dễ gần, và giúp khách dễ đưa ra lựa chọn. Câu hỏi: ' +
+      content;
+
+    const chatBotAnswer = await generateText(prompt);
+    const newMessageChatBot = new this.messageModel({
+      sender_id: 'chat-bot',
+      receiver_id: sender_id,
+      content: chatBotAnswer,
+    });
+    return newMessageChatBot.save();
+  }
+  async getChatBotMessage(id: string): Promise<any> {
+    const chatBotMessage = await this.messageModel.find({
+      $or: [{ sender_id: id }, { receiver_id: id }],
+    });
+    if (!chatBotMessage) {
+      throw new Error('Chat bot message not found');
+    }
+    return chatBotMessage;
   }
 }
