@@ -6,6 +6,7 @@ import { Voucher } from '../voucher/voucher.schema';
 import { Customer } from '../customer/customer.schema';
 import { OrderItem } from '../order-item/orderItem.schema';
 import { Cart } from '../cart/cart.schema';
+import { HistoryService } from '../history/history.service';
 
 @Injectable()
 export class OrderService {
@@ -16,6 +17,7 @@ export class OrderService {
     @InjectModel(OrderItem.name)
     private readonly orderItemModel: Model<OrderItem>,
     @InjectModel(Cart.name) private readonly cartModel: Model<Cart>,
+    private readonly historyService: HistoryService,
   ) {}
 
   async createOrder(createOrderDto: CreateOrderDto): Promise<Order> {
@@ -111,6 +113,38 @@ export class OrderService {
     return { msg: 'Cancelled order successfully' };
   }
 
+  async cancelOrderByRestaurant(id: ObjectId): Promise<{ msg: string }> {
+    const order = await this.orderModel
+      .findById(id)
+      .populate<{ array_item: OrderItem[] }>('array_item')
+      .exec();
+    if (!order) {
+      throw new BadRequestException('No found order');
+    }
+
+    order.status = 'Cancel';
+    await order.save();
+
+    const sumDishes = Array.isArray(order.array_item)
+      ? order.array_item.reduce(
+          (sum: number, item: { quantity?: number }) =>
+            sum + (Number(item?.quantity) || 0),
+          0,
+        )
+      : 0;
+
+    // Tạo lịch sử đơn hàng sau khi hủy
+    await this.historyService.createHistory({
+      order_id: order._id,
+      customer_id: new Types.ObjectId(order.customer_id.toString()),
+      reason: 'Cancelled by restaurant',
+      cost: order.total_price,
+      sum_dishes: sumDishes,
+    });
+
+    return { msg: 'Cancelled order successfully' };
+  }
+
   async fetchAllOrderByCustomer(customerId: ObjectId): Promise<Order[]> {
     return await this.orderModel.find({ customer_id: customerId }).exec();
   }
@@ -136,6 +170,22 @@ export class OrderService {
   ): Promise<Order[]> {
     return await this.orderModel
       .find({ restaurant_id: restaurantId, status: 'Pending' })
+      .select('customer_id total_price note createdAt')
+      .populate({ path: 'customer_id', select: 'name avatar' })
+      .populate({
+        path: 'array_item',
+        select: 'dish_id quantity topping',
+        populate: [
+          {
+            path: 'dish_id',
+            select: 'name',
+          },
+          {
+            path: 'topping',
+            select: 'name',
+          },
+        ],
+      })
       .exec();
   }
 

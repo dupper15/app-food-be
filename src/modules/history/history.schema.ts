@@ -1,4 +1,5 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';import { Document, Types, ObjectId } from 'mongoose';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Document, Types, ObjectId } from 'mongoose';
 
 export type HistoryDocument = History & Document;
 
