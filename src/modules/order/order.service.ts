@@ -1,5 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
+import { BadRequestException, Injectable } from '@nestjs/common';import { InjectModel } from '@nestjs/mongoose';
 import { Order } from './order.schema';
 import { Model, ObjectId, Types } from 'mongoose';
 import { CreateOrderDto } from './dto/createOrder.dto';
@@ -97,6 +96,7 @@ export class OrderService {
     if (!order) {
       throw new BadRequestException('No found order');
     }
+    order.status = 'Pending';
     const newOrder = new this.orderModel(order);
     return newOrder.save();
   }
