@@ -24,4 +24,38 @@ export class HistoryService {
     }
     return history;
   }
+
+  async fetchAllHistorySuccessByRestaurant(id: string): Promise<History[]> {
+    const histories = await this.historyModel
+      .find()
+      .populate({ path: 'order_id', select: 'status restaurant_id' })
+      .populate({ path: 'customer_id', select: 'name avatar' })
+      .exec();
+
+    if (!histories) throw new Error('History not found');
+
+    return histories.filter(
+      (history) =>
+        history.order_id &&
+        String((history.order_id as any).restaurant_id) === String(id) &&
+        (history.order_id as any).status === 'completed',
+    );
+  }
+
+  async fetchAllHistoryFailedByRestaurant(id: string): Promise<History[]> {
+    const histories = await this.historyModel
+      .find()
+      .populate({ path: 'order_id', select: 'status restaurant_id' })
+      .populate({ path: 'customer_id', select: 'name avatar' })
+      .exec();
+
+    if (!histories) throw new Error('History not found');
+
+    return histories.filter(
+      (history) =>
+        history.order_id &&
+        String((history.order_id as any).restaurant_id) === String(id) &&
+        (history.order_id as any).status === 'Cancel',
+    );
+  }
 }

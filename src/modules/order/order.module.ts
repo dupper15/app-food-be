@@ -7,6 +7,7 @@ import { VoucherModule } from '../voucher/voucher.module';
 import { CustomerModule } from '../customer/customer.module';
 import { OrderItemModule } from '../order-item/orderItem.module';
 import { CartModule } from '../cart/cart.module';
+import { HistoryModule } from '../history/history.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { CartModule } from '../cart/cart.module';
     CustomerModule,
     OrderItemModule,
     CartModule,
+    HistoryModule,
   ],
   controllers: [OrderController],
   providers: [OrderService],
