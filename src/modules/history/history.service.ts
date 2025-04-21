@@ -73,7 +73,7 @@ export class HistoryService {
       (history) =>
         history.order_id &&
         String((history.order_id as any).restaurant_id) === String(id) &&
-        (history.order_id as any).status === 'completed',
+        (history.order_id as any).status === 'Completed',
     );
   }
 

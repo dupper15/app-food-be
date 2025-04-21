@@ -1,4 +1,5 @@
-import { BadRequestException, Injectable } from '@nestjs/common';import { InjectModel } from '@nestjs/mongoose';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
 import { Order } from './order.schema';
 import { Model, ObjectId, Types } from 'mongoose';
 import { CreateOrderDto } from './dto/createOrder.dto';
@@ -135,8 +136,8 @@ export class OrderService {
 
     // Tạo lịch sử đơn hàng sau khi hủy
     await this.historyService.createHistory({
-      order_id: order._id,
-      customer_id: new Types.ObjectId(order.customer_id.toString()),
+      order_id: order._id.toString(),
+      customer_id: order.customer_id.toString(),
       reason: 'Cancelled by restaurant',
       cost: order.total_price,
       sum_dishes: sumDishes,
@@ -193,7 +194,26 @@ export class OrderService {
     restaurantId: ObjectId,
   ): Promise<Order[]> {
     return await this.orderModel
-      .find({ restaurant_id: restaurantId, status: 'Ongoing' })
+      .find({
+        restaurant_id: restaurantId,
+        status: { $nin: ['Pending', 'Completed', 'Cancel'] },
+      })
+      .select('customer_id total_price note status createdAt')
+      .populate({ path: 'customer_id', select: 'name avatar' })
+      .populate({
+        path: 'array_item',
+        select: 'dish_id quantity topping',
+        populate: [
+          {
+            path: 'dish_id',
+            select: 'name',
+          },
+          {
+            path: 'topping',
+            select: 'name',
+          },
+        ],
+      })
       .exec();
   }
 
@@ -203,5 +223,38 @@ export class OrderService {
     return await this.orderModel
       .find({ restaurant_id: restaurantId, status: 'Cancel' })
       .exec();
+  }
+
+  async updateStatusOrder(id: string): Promise<Order> {
+    const order = await this.orderModel.findById(id).exec();
+    if (!order) {
+      throw new BadRequestException('No found order');
+    }
+    if (order.status === 'Pending') {
+      order.status = 'Received';
+    } else if (order.status === 'Received') {
+      order.status = 'Preparing';
+    } else if (order.status === 'Preparing') {
+      order.status = 'Ready';
+    } else if (order.status === 'Ready') {
+      order.status = 'Completed';
+      const sumDishes: number = Array.isArray(order.array_item)
+        ? (order.array_item as { quantity?: number }[]).reduce(
+            (sum, item) => sum + (Number(item?.quantity) || 0),
+            0,
+          )
+        : 0;
+      // Tạo lịch sử đơn hàng sau khi hủy
+      await this.historyService.createHistory({
+        order_id: order._id.toString(),
+        customer_id: order.customer_id.toString(),
+        cost: order.total_price,
+        sum_dishes: sumDishes,
+      });
+    } else {
+      throw new BadRequestException('Invalid status update');
+    }
+    await order.save();
+    return order;
   }
 }
