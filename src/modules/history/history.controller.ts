@@ -28,6 +28,13 @@ export class HistoryController {
     return this.historyService.fetchDetailHistoryByCustomer(id);
   }
 
+  @Get('restaurant/detail/:id')
+  async fetchDetailHistoryByRestaurnat(
+    @Param('id') id: string,
+  ): Promise<History> {
+    return this.historyService.fetchDetailHistoryByRestaurant(id);
+  }
+
   @Get('restaurant/success/:id')
   async fetchAllHistorySuccessByRestaurant(
     @Param('id') id: string,

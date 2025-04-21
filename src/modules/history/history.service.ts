@@ -1,4 +1,5 @@
-import { Injectable } from '@nestjs/common';import { InjectModel } from '@nestjs/mongoose';
+import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { History, HistoryDocument } from './history.schema';
 import { CreateHistoryDto } from './dto/createHistory';
@@ -22,6 +23,40 @@ export class HistoryService {
     if (history === null) {
       throw new Error('History not found');
     }
+    return history;
+  }
+
+  async fetchDetailHistoryByRestaurant(id: string): Promise<History> {
+    const history = await this.historyModel
+      .findById(id)
+      .populate({
+        path: 'order_id',
+        select: 'status restaurant_id array_item',
+        populate: {
+          path: 'array_item',
+          select: 'dish_id quantity topping',
+          populate: [
+            {
+              path: 'dish_id',
+              select: 'name price',
+            },
+            {
+              path: 'topping',
+              select: 'name price',
+            },
+          ],
+        },
+      })
+      .populate({
+        path: 'customer_id',
+        select: 'name avatar',
+      })
+      .exec();
+
+    if (!history) {
+      throw new Error('History not found');
+    }
+
     return history;
   }
 
