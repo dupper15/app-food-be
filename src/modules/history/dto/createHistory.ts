@@ -1,18 +1,11 @@
-import {
-  IsMongoId,
-  IsNumber,
-  IsOptional,
-  IsString,
-  Min,
-} from 'class-validator';
-import { Types } from 'mongoose';
+import { IsNumber, IsOptional, IsString, Min } from 'class-validator';
 
 export class CreateHistoryDto {
-  @IsMongoId()
-  order_id: Types.ObjectId;
+  @IsString()
+  order_id: string;
 
-  @IsMongoId()
-  customer_id: Types.ObjectId;
+  @IsString()
+  customer_id: string;
 
   @IsOptional()
   @IsString()

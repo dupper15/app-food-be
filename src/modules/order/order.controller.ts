@@ -80,4 +80,9 @@ export class OrderController {
       restaurantId,
     );
   }
+
+  @Patch('update-status/:id')
+  async updateStatusOrderController(@Param('id') id: string) {
+    return await this.orderService.updateStatusOrder(id);
+  }
 }
