@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Dish } from './dish.schema';
-import { Model, ObjectId, Types } from 'mongoose';
+import { Model, ObjectId } from 'mongoose';
 import { CreateDishDto } from './dto/createDish.dto';
 import { Restaurant } from '../restaurant/restaurant.schema';
 import { EditDishDto } from './dto/editDish.dto';
@@ -25,21 +25,7 @@ export class DishService {
     return restaurant;
   }
   async createDish(createDishDto: CreateDishDto): Promise<Dish> {
-    //check restaurant
-    const checkRestaurant = await this.restaurantModel
-      .findById(createDishDto.restaurant_id)
-      .select('_id')
-      .lean();
-    if (!checkRestaurant) {
-      throw new BadRequestException('Restaurant not found');
-    }
-    const newDish = new this.dishModel({
-      ...createDishDto,
-      topping: Array.isArray(createDishDto.topping)
-        ? createDishDto.topping.map((id) => new Types.ObjectId(id))
-        : [],
-    });
-    return newDish.save();
+    return await this.dishModel.create(createDishDto);
   }
 
   async editDish(id: string, editDishDto: EditDishDto): Promise<Dish> {
@@ -72,14 +58,17 @@ export class DishService {
     return { msg: 'Dish deleted successfully' };
   }
 
-  async fetchAllDishByRestaurant(id: ObjectId): Promise<Dish[]> {
+  async fetchAllDishByRestaurant(id: string): Promise<Dish[]> {
     const dishes = await this.dishModel
       .find({
         restaurant_id: id,
       })
-      .populate({ path: 'topping', select: 'name price' })
+      .populate('topping', 'name price')
       .lean()
       .exec();
+    if (!dishes || dishes.length === 0) {
+      console.log('No dishes found for restaurant:', id);
+    }
     return dishes;
   }
 

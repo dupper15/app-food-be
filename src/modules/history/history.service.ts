@@ -25,4 +25,72 @@ export class HistoryService {
     }
     return history;
   }
+
+  async fetchDetailHistoryByRestaurant(id: string): Promise<History> {
+    const history = await this.historyModel
+      .findById(id)
+      .populate({
+        path: 'order_id',
+        select: 'status restaurant_id array_item',
+        populate: {
+          path: 'array_item',
+          select: 'dish_id quantity topping',
+          populate: [
+            {
+              path: 'dish_id',
+              select: 'name price',
+            },
+            {
+              path: 'topping',
+              select: 'name price',
+            },
+          ],
+        },
+      })
+      .populate({
+        path: 'customer_id',
+        select: 'name avatar',
+      })
+      .exec();
+
+    if (!history) {
+      throw new Error('History not found');
+    }
+
+    return history;
+  }
+
+  async fetchAllHistorySuccessByRestaurant(id: string): Promise<History[]> {
+    const histories = await this.historyModel
+      .find()
+      .populate({ path: 'order_id', select: 'status restaurant_id' })
+      .populate({ path: 'customer_id', select: 'name avatar' })
+      .exec();
+
+    if (!histories) throw new Error('History not found');
+
+    return histories.filter(
+      (history) =>
+        history.order_id &&
+        String((history.order_id as any).restaurant_id) === String(id) &&
+        (history.order_id as any).status === 'Completed',
+    );
+  }
+
+  async fetchAllHistoryFailedByRestaurant(id: string): Promise<History[]> {
+    const histories = await this.historyModel
+      .find()
+      .populate({ path: 'order_id', select: 'status restaurant_id' })
+      .populate({ path: 'customer_id', select: 'name avatar' })
+      .exec();
+
+    if (!histories) throw new Error('History not found');
+
+    return histories.filter(
+      (history) =>
+        history.order_id &&
+        String((history.order_id as any).restaurant_id) === String(id) &&
+        (history.order_id as any).status === 'Cancel',
+    );
+  }
 }

@@ -26,6 +26,19 @@ export class RatingService {
     return this.ratingModel.create(ratingData);
   }
 
+  async updateRating(
+    id: string,
+    updateRatingDto: Partial<CreateRatingDto>,
+  ): Promise<Rating> {
+    const rating = await this.ratingModel.findByIdAndUpdate(
+      id,
+      updateRatingDto,
+      { new: true },
+    );
+    if (!rating) throw new NotFoundException('Rating not found');
+    return rating;
+  }
+
   async fetchAllRatingsByRestaurant(restaurant_id: string): Promise<Rating[]> {
     const restaurantObjectId = new Types.ObjectId(restaurant_id);
 
@@ -48,5 +61,11 @@ export class RatingService {
     const deleted = await this.ratingModel.findByIdAndDelete(id);
     if (!deleted) throw new NotFoundException('Rating not found');
     return { msg: 'Rating deleted successfully' };
+  }
+
+  async fetchRatingByOrderId(order_id: string): Promise<Rating> {
+    const rating = await this.ratingModel.findOne({ order_id }).exec();
+    if (!rating) throw new NotFoundException('Rating not found');
+    return rating;
   }
 }

@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Param,
+  Patch,
   Post,
   Put,
   UsePipes,
@@ -31,6 +32,11 @@ export class OrderController {
   @Put('cancel-order/:id')
   async cancelOrderController(@Param('id') orderId: ObjectId) {
     return await this.orderService.cancelOrder(orderId);
+  }
+
+  @Patch('restaurant/cancel-order/:id')
+  async cancelOrderByRestaurantController(@Param('id') id: ObjectId) {
+    return await this.orderService.cancelOrderByRestaurant(id);
   }
 
   @Get('fetchall-order-by-customer/:id')
@@ -73,5 +79,10 @@ export class OrderController {
     return await this.orderService.fetchCancelledOrderByRestaurant(
       restaurantId,
     );
+  }
+
+  @Patch('update-status/:id')
+  async updateStatusOrderController(@Param('id') id: string) {
+    return await this.orderService.updateStatusOrder(id);
   }
 }

@@ -10,9 +10,6 @@ export class Topping {
 
   @Prop({ required: true })
   price: number;
-
-  @Prop({ required: true })
-  image: string;
 }
 
 export const ToppingSchema = SchemaFactory.createForClass(Topping);

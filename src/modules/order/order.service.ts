@@ -7,6 +7,7 @@ import { Voucher } from '../voucher/voucher.schema';
 import { Customer } from '../customer/customer.schema';
 import { OrderItem } from '../order-item/orderItem.schema';
 import { Cart } from '../cart/cart.schema';
+import { HistoryService } from '../history/history.service';
 
 @Injectable()
 export class OrderService {
@@ -17,6 +18,7 @@ export class OrderService {
     @InjectModel(OrderItem.name)
     private readonly orderItemModel: Model<OrderItem>,
     @InjectModel(Cart.name) private readonly cartModel: Model<Cart>,
+    private readonly historyService: HistoryService,
   ) {}
 
   async createOrder(createOrderDto: CreateOrderDto): Promise<Order> {
@@ -97,6 +99,7 @@ export class OrderService {
     if (!order) {
       throw new BadRequestException('No found order');
     }
+    order.status = 'Pending';
     const newOrder = new this.orderModel(order);
     return newOrder.save();
   }
@@ -108,6 +111,38 @@ export class OrderService {
     }
     order.status = 'Cancel';
     await order.save();
+    return { msg: 'Cancelled order successfully' };
+  }
+
+  async cancelOrderByRestaurant(id: ObjectId): Promise<{ msg: string }> {
+    const order = await this.orderModel
+      .findById(id)
+      .populate<{ array_item: OrderItem[] }>('array_item')
+      .exec();
+    if (!order) {
+      throw new BadRequestException('No found order');
+    }
+
+    order.status = 'Cancel';
+    await order.save();
+
+    const sumDishes = Array.isArray(order.array_item)
+      ? order.array_item.reduce(
+          (sum: number, item: { quantity?: number }) =>
+            sum + (Number(item?.quantity) || 0),
+          0,
+        )
+      : 0;
+
+    // Tạo lịch sử đơn hàng sau khi hủy
+    await this.historyService.createHistory({
+      order_id: order._id.toString(),
+      customer_id: order.customer_id.toString(),
+      reason: 'Cancelled by restaurant',
+      cost: order.total_price,
+      sum_dishes: sumDishes,
+    });
+
     return { msg: 'Cancelled order successfully' };
   }
 
@@ -136,6 +171,22 @@ export class OrderService {
   ): Promise<Order[]> {
     return await this.orderModel
       .find({ restaurant_id: restaurantId, status: 'Pending' })
+      .select('customer_id total_price note createdAt')
+      .populate({ path: 'customer_id', select: 'name avatar' })
+      .populate({
+        path: 'array_item',
+        select: 'dish_id quantity topping',
+        populate: [
+          {
+            path: 'dish_id',
+            select: 'name',
+          },
+          {
+            path: 'topping',
+            select: 'name',
+          },
+        ],
+      })
       .exec();
   }
 
@@ -143,7 +194,26 @@ export class OrderService {
     restaurantId: ObjectId,
   ): Promise<Order[]> {
     return await this.orderModel
-      .find({ restaurant_id: restaurantId, status: 'Ongoing' })
+      .find({
+        restaurant_id: restaurantId,
+        status: { $nin: ['Pending', 'Completed', 'Cancel'] },
+      })
+      .select('customer_id total_price note status createdAt')
+      .populate({ path: 'customer_id', select: 'name avatar' })
+      .populate({
+        path: 'array_item',
+        select: 'dish_id quantity topping',
+        populate: [
+          {
+            path: 'dish_id',
+            select: 'name',
+          },
+          {
+            path: 'topping',
+            select: 'name',
+          },
+        ],
+      })
       .exec();
   }
 
@@ -173,5 +243,38 @@ export class OrderService {
         ],
       })
       .exec();
+  }
+
+  async updateStatusOrder(id: string): Promise<Order> {
+    const order = await this.orderModel.findById(id).exec();
+    if (!order) {
+      throw new BadRequestException('No found order');
+    }
+    if (order.status === 'Pending') {
+      order.status = 'Received';
+    } else if (order.status === 'Received') {
+      order.status = 'Preparing';
+    } else if (order.status === 'Preparing') {
+      order.status = 'Ready';
+    } else if (order.status === 'Ready') {
+      order.status = 'Completed';
+      const sumDishes: number = Array.isArray(order.array_item)
+        ? (order.array_item as { quantity?: number }[]).reduce(
+            (sum, item) => sum + (Number(item?.quantity) || 0),
+            0,
+          )
+        : 0;
+      // Tạo lịch sử đơn hàng sau khi hủy
+      await this.historyService.createHistory({
+        order_id: order._id.toString(),
+        customer_id: order.customer_id.toString(),
+        cost: order.total_price,
+        sum_dishes: sumDishes,
+      });
+    } else {
+      throw new BadRequestException('Invalid status update');
+    }
+    await order.save();
+    return order;
   }
 }
