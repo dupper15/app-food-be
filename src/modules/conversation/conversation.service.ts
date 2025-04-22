@@ -4,7 +4,7 @@ import { Conversation } from './conversation.schema';
 import { Model, Types } from 'mongoose';
 import { Message } from '../message/message.schema';
 import { SendMessageDto } from './dto/send-message.dto';
-import { generateText } from 'src/chatbot/chatbot';
+import { ChatBotService } from '../chatbot/chatbot.service';
 
 @Injectable()
 export class ConversationService {
@@ -13,6 +13,7 @@ export class ConversationService {
     private readonly conversationModel: Model<Conversation>,
     @InjectModel(Message.name)
     private readonly messageModel: Model<Message>,
+    private readonly chatBotService: ChatBotService,
   ) {}
   async sendMessage(sendMessageDto: SendMessageDto): Promise<Conversation> {
     const { content, image, receiver_id, sender_id, _id } = sendMessageDto;
@@ -154,17 +155,17 @@ export class ConversationService {
       image,
     });
     await newMessage.save();
-    const prompt =
-      'Bạn là một trợ lý ẩm thực thân thiện của nền tảng đặt đồ ăn. Hãy trả lời câu hỏi sau theo hướng gợi ý món ăn ngon, giới thiệu nhà hàng phù hợp, hoặc chia sẻ thông tin thú vị liên quan đến ẩm thực. Luôn giữ giọng điệu thân thiện, dễ gần, và giúp khách dễ đưa ra lựa chọn. Câu hỏi: ' +
-      content;
-
-    const chatBotAnswer = await generateText(prompt);
+    const chatBotAnswer = await this.chatBotService.generateText(
+      content,
+      sender_id,
+    );
     const newMessageChatBot = new this.messageModel({
       sender_id: 'chat-bot',
       receiver_id: sender_id,
       content: chatBotAnswer,
     });
-    return newMessageChatBot.save();
+    await newMessageChatBot.save();
+    return newMessageChatBot;
   }
   async getChatBotMessage(id: string): Promise<any> {
     const chatBotMessage = await this.messageModel.find({

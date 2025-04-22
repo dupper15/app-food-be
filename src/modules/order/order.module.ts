@@ -25,6 +25,6 @@ import { HistoryModule } from '../history/history.module';
   ],
   controllers: [OrderController],
   providers: [OrderService],
-  exports: [MongooseModule],
+  exports: [MongooseModule, OrderService],
 })
 export class OrderModule {}

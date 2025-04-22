@@ -22,6 +22,7 @@ import { CartModule } from './modules/cart/cart.module';
 import { AppController } from './modules/app.controller';
 import { OrderModule } from './modules/order/order.module';
 import { SearchModule } from './modules/search/search.module';
+import { RedisModule } from './modules/redis/redis.module';
 dotenv.config();
 @Module({
   imports: [
@@ -49,6 +50,7 @@ dotenv.config();
     CartModule,
     OrderModule,
     SearchModule,
+    RedisModule,
   ],
   controllers: [AppController],
   providers: [],

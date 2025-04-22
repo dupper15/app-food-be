@@ -21,6 +21,6 @@ import { UploadModule } from '../upload/upload.module';
   ],
   controllers: [DishController],
   providers: [DishService],
-  exports: [MongooseModule],
+  exports: [MongooseModule, DishService],
 })
 export class DishModule {}
