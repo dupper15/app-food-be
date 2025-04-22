@@ -23,6 +23,6 @@ import { CartModule } from '../cart/cart.module';
   ],
   controllers: [OrderController],
   providers: [OrderService],
-  exports: [MongooseModule],
+  exports: [MongooseModule, OrderService],
 })
 export class OrderModule {}

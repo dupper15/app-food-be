@@ -115,4 +115,14 @@ export class DishService {
 
     return dishByRestaurant;
   }
+  async fetchBotDish(): Promise<Dish[]> {
+    const dishByRestaurant = await this.dishModel.find({}).exec();
+    if (!dishByRestaurant || dishByRestaurant.length === 0) {
+      throw new BadRequestException(
+        'No dishes found for this category in the specified restaurant',
+      );
+    }
+
+    return dishByRestaurant;
+  }
 }

@@ -19,6 +19,6 @@ import { CartService } from './cart.service';
   ],
   controllers: [CartController],
   providers: [CartService],
-  exports: [MongooseModule],
+  exports: [MongooseModule, CartService],
 })
 export class CartModule {}

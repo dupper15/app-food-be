@@ -154,4 +154,24 @@ export class OrderService {
       .find({ restaurant_id: restaurantId, status: 'Cancel' })
       .exec();
   }
+  async fetchSuccessfullOrderByCustomer(
+    customerId: ObjectId,
+  ): Promise<Order[]> {
+    return await this.orderModel
+      .find({ customer_id: customerId, status: 'Success' })
+      .exec();
+  }
+  async fetchOngoingOrderByCustomer(customerId: ObjectId): Promise<Order[]> {
+    return await this.orderModel
+      .find({
+        customer_id: customerId,
+        $or: [
+          { status: 'Pending' },
+          { status: 'Received' },
+          { status: 'Preparing' },
+          { status: 'Ready' },
+        ],
+      })
+      .exec();
+  }
 }

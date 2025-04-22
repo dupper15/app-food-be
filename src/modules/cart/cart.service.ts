@@ -19,6 +19,7 @@ export class CartService {
   async addDish(createOrderItemDto: CreateOrderItemDto, userId: string) {
     const user = new Types.ObjectId(userId);
     createOrderItemDto.user_id = user;
+    console.log('createOrderItemDto', createOrderItemDto);
     const dish = await this.dishModel.findById(createOrderItemDto.dish_id);
     if (!dish) {
       throw new Error('Dish not found');
