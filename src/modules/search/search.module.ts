@@ -3,9 +3,11 @@ import { SearchController } from './search.controller';
 import { SearchService } from './search.service';
 import { RestaurantModule } from '../restaurant/restaurant.module';
 import { DishModule } from '../dish/dish.module';
+import { ChatBotModule } from '../chatbot/chatbot.module';
+import { UploadModule } from '../upload/upload.module';
 
 @Module({
-  imports: [RestaurantModule, DishModule],
+  imports: [RestaurantModule, DishModule, ChatBotModule, UploadModule],
   providers: [SearchService],
   controllers: [SearchController],
   exports: [SearchModule],
