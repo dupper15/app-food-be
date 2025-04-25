@@ -1,6 +1,7 @@
 import {
   Controller,
   Get,
+  Post,
   Query,
   UploadedFiles,
   UseInterceptors,
@@ -19,9 +20,10 @@ export class SearchController {
   getTextSearch(@Query('query') query: string) {
     return this.searchService.getTextSearch(query);
   }
-  @Get('image')
+  @Post('image')
   @UseInterceptors(FilesInterceptor('image'))
   async getImageSearch(@UploadedFiles() image: Express.Multer.File[]) {
+    console.log('ok', image);
     const url = await this.uploadService.uploadMultipleImages(image);
     return this.searchService.getImageSearch(url[0]);
   }
