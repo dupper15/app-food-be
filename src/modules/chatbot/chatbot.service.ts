@@ -21,32 +21,32 @@ export class ChatBotService {
     private readonly dishService: DishService,
     private readonly toppingService: ToppingService,
   ) {}
-  // export const generateTextFromImage = async (
-  //   imageUrl: string,
-  //   text: string = 'Mô tả món ăn này',
-  // ): Promise<string> => {
-  //   try {
-  //     const response = await fetch(imageUrl);
-  //     const buffer = await response.arrayBuffer();
-  //     const base64Image = Buffer.from(buffer).toString('base64');
+  async generateTextFromImage(
+    imageUrl: string,
+    text: string = 'mô tả món ăn này',
+  ): Promise<string> {
+    try {
+      const response = await fetch(imageUrl);
+      const buffer = await response.arrayBuffer();
+      const base64Image = Buffer.from(buffer).toString('base64');
 
-  //     const model = getModel();
-  //     const result = await model.generateContent([
-  //       {
-  //         inlineData: {
-  //           data: base64Image,
-  //           mimeType: 'image/jpeg',
-  //         },
-  //       },
-  //       text,
-  //     ]);
+      const model = await this.getModel();
+      const result = await model.generateContent([
+        {
+          inlineData: {
+            data: base64Image,
+            mimeType: 'image/jpeg',
+          },
+        },
+        text,
+      ]);
 
-  //     return result.response.text();
-  //   } catch (err) {
-  //     console.error('Error generating content from image:', err);
-  //     return 'Lỗi khi tạo mô tả từ ảnh';
-  //   }
-  // };
+      return result.response.text();
+    } catch (err) {
+      console.error('Error generating content from image:', err);
+      return 'Lỗi khi tạo mô tả từ ảnh';
+    }
+  }
 
   async generateText(userMessage: string, userId) {
     try {
