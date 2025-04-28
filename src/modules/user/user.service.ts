@@ -241,21 +241,20 @@ export class UserService<T extends User> {
       throw new BadRequestException('Invalid total_time_spent value');
     }
 
-    let account: User | null = null;
-    let userType = ''; // Để xác định loại người dùng đã cập nhật
-
     // Mảng các model người dùng có total_time_spent
-    const userRoles: { model: any; type: string }[] = [
-      { model: this.customerModel, type: 'customer' },
-      { model: this.restaurantOwnerModel, type: 'restaurantOwner' },
-    ];
+    const userRoles: (
+      | Model<Admin>
+      | Model<Customer>
+      | Model<RestaurantOwner>
+    )[] = [this.adminModel, this.customerModel, this.restaurantOwnerModel];
 
-    // Tìm đúng người dùng trong model
-    console.log('id', id);
-    for (const { model } of userRoles) {
-      account = await model.findById(id);
+    let account: any = null;
+
+    for (const model of userRoles) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      account = await (model as Model<User>).findById(id);
+      if (account) break;
     }
-
     if (!account) {
       throw new BadRequestException('Account not found');
     }
