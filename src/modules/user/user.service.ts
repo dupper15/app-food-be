@@ -258,7 +258,8 @@ export class UserService<T extends User> {
     if (!account) {
       throw new BadRequestException('Account not found');
     }
-
+  console.log('account', account);
+    console.log('total_time_spent', total_time_spent);
     // Cập nhật total_time_spent cho tài khoản tìm thấy
     account.total_time_spent = total_time_spent;
     await account.save();
