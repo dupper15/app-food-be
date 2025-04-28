@@ -1,5 +1,4 @@
-import {
-  Body,
+import {  Body,
   Controller,
   Delete,
   Get,
@@ -54,5 +53,10 @@ export class UserController<T extends User> {
   @Put('change-password/:id')
   async changePassword(@Param('id') id: string, @Body() data: any) {
     return await this.userService.changePassword(id, data);
+  }
+  @Put('/:id/usage-time')
+  async updateUsageTime(@Param('id') id: string, @Body() data: any) {
+    console.log('data', data);
+    return await this.userService.updateUsageTime(id, data);
   }
 }

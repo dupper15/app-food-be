@@ -6,12 +6,6 @@ export class RestaurantOwner extends User {
   @Prop({ default: '' })
   avatar: string;
 
-  @Prop({ default: 0 })
-  total_time_spend: number;
-
-  @Prop({ default: 0 })
-  total_logins: number;
-
   @Prop({ default: '' })
   phone: string;
 
