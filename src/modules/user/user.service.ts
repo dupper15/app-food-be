@@ -263,6 +263,6 @@ export class UserService<T extends User> {
     account.total_time_spent = total_time_spent;
     await account.save();
 
-    return { message: `Update ${userType} usage time successfully` };
+    return { message: `Update  usage time successfully` };
   }
 }
