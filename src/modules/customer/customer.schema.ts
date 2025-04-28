@@ -17,13 +17,7 @@ export class Customer extends User {
   phone: string;
 
   @Prop({ default: 0 })
-  total_logins: number;
-
-  @Prop({ default: 0 })
   total_orders: number;
-
-  @Prop({ default: 0 })
-  total_time_spent: number;
 
   @Prop({ default: 0 })
   last_login: Date;
