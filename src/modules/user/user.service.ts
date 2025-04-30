@@ -266,7 +266,6 @@ export class UserService<T extends User> {
     // Cập nhật total_time_spent cho tài khoản tìm thấy
     account.total_time_spent = total_time_spent;
     await account.save();
-
     return { message: `Update usage time successfully` };
   }
 }
