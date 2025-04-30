@@ -1,5 +1,4 @@
-import {
-  BadRequestException,
+import {  BadRequestException,
   HttpException,
   Injectable,
   NotFoundException,
@@ -73,15 +72,17 @@ export class UserService<T extends User> {
     userType: string;
     message: string;
     total_time_spent: number;
+    isVerified: boolean;
   }> {
     const { email, password } = loginUserDto;
-
+    let isVerified = true;
     // find role user
     let userType = 'customer';
     let existingUser;
     const existingCustomer = await this.customerModel.findOne({ email });
     if (existingCustomer) {
       existingUser = existingCustomer;
+      isVerified = existingCustomer.isVerified;
       userType = 'customer';
     }
     const existingAdmin = await this.adminModel.findOne({ email });
@@ -93,6 +94,7 @@ export class UserService<T extends User> {
       email,
     });
     if (existingRestaurantOwner) {
+      isVerified = existingRestaurantOwner.isVerified;
       existingUser = existingRestaurantOwner;
       userType = 'restaurantOwner';
     }
@@ -126,6 +128,7 @@ export class UserService<T extends User> {
       userType: userType,
       message: 'Login successfully',
       total_time_spent: existingUser.total_time_spent,
+      isVerified: isVerified,
     };
   }
 
@@ -241,18 +244,19 @@ export class UserService<T extends User> {
       throw new BadRequestException('Invalid total_time_spent value');
     }
 
-    let account: User | null = null;
-    let userType = ''; // Để xác định loại người dùng đã cập nhật
-
     // Mảng các model người dùng có total_time_spent
-    const userRoles: { model: any; type: string }[] = [
-      { model: this.customerModel, type: 'customer' },
-      { model: this.restaurantOwnerModel, type: 'restaurantOwner' },
-    ];
+    const userRoles: (
+      | Model<Admin>
+      | Model<Customer>
+      | Model<RestaurantOwner>
+    )[] = [this.adminModel, this.customerModel, this.restaurantOwnerModel];
 
-    // Tìm đúng người dùng trong model
-    for (const { model } of userRoles) {
-      account = await model.findById(id);
+    let account: any = null;
+
+    for (const model of userRoles) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      account = await (model as Model<User>).findById(id);
+      if (account) break;
     }
 
     if (!account) {
@@ -263,6 +267,6 @@ export class UserService<T extends User> {
     account.total_time_spent = total_time_spent;
     await account.save();
 
-    return { message: `Update ${userType} usage time successfully` };
+    return { message: `Update usage time successfully` };
   }
 }
