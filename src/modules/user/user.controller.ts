@@ -56,7 +56,6 @@ export class UserController<T extends User> {
   }
   @Put('/:id/usage-time')
   async updateUsageTime(@Param('id') id: string, @Body() data: any) {
-    console.log('data', data);
     return await this.userService.updateUsageTime(id, data);
   }
 }

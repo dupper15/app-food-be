@@ -72,15 +72,17 @@ export class UserService<T extends User> {
     userType: string;
     message: string;
     total_time_spent: number;
+    isVerified: boolean;
   }> {
     const { email, password } = loginUserDto;
-
+    let isVerified = true;
     // find role user
     let userType = 'customer';
     let existingUser;
     const existingCustomer = await this.customerModel.findOne({ email });
     if (existingCustomer) {
       existingUser = existingCustomer;
+      isVerified = existingCustomer.isVerified;
       userType = 'customer';
     }
     const existingAdmin = await this.adminModel.findOne({ email });
@@ -92,6 +94,7 @@ export class UserService<T extends User> {
       email,
     });
     if (existingRestaurantOwner) {
+      isVerified = existingRestaurantOwner.isVerified;
       existingUser = existingRestaurantOwner;
       userType = 'restaurantOwner';
     }
@@ -125,6 +128,7 @@ export class UserService<T extends User> {
       userType: userType,
       message: 'Login successfully',
       total_time_spent: existingUser.total_time_spent,
+      isVerified: isVerified,
     };
   }
 
@@ -262,7 +266,6 @@ export class UserService<T extends User> {
     // Cập nhật total_time_spent cho tài khoản tìm thấy
     account.total_time_spent = total_time_spent;
     await account.save();
-
-    return { message: `Update  usage time successfully` };
+    return { message: `Update usage time successfully` };
   }
 }
