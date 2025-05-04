@@ -71,15 +71,18 @@ export class UserService<T extends User> {
     refreshToken: string;
     userType: string;
     message: string;
+    total_time_spent: number;
+    isVerified: boolean;
   }> {
     const { email, password } = loginUserDto;
-
+    let isVerified = true;
     // find role user
     let userType = 'customer';
     let existingUser;
     const existingCustomer = await this.customerModel.findOne({ email });
     if (existingCustomer) {
       existingUser = existingCustomer;
+      isVerified = existingCustomer.isVerified;
       userType = 'customer';
     }
     const existingAdmin = await this.adminModel.findOne({ email });
@@ -91,13 +94,15 @@ export class UserService<T extends User> {
       email,
     });
     if (existingRestaurantOwner) {
+      isVerified = existingRestaurantOwner.isVerified;
       existingUser = existingRestaurantOwner;
       userType = 'restaurantOwner';
     }
     if (!existingCustomer && !existingAdmin && !existingRestaurantOwner) {
       throw new BadRequestException('Email not exist! Please try again');
     }
-
+    existingUser.total_logins++;
+    await existingUser.save();
     // check password
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     const isPasswordMatch = await bcrypt.compare(
@@ -122,6 +127,8 @@ export class UserService<T extends User> {
       refreshToken: refreshToken,
       userType: userType,
       message: 'Login successfully',
+      total_time_spent: existingUser.total_time_spent,
+      isVerified: isVerified,
     };
   }
 
@@ -225,5 +232,40 @@ export class UserService<T extends User> {
     await account.save();
 
     return { message: 'Change password successfully' };
+  }
+  async updateUsageTime(
+    id: string,
+    data: { total_time_spent: number },
+  ): Promise<{ message: string }> {
+    const { total_time_spent } = data;
+
+    // Kiểm tra xem total_time_spent có hợp lệ không
+    if (typeof total_time_spent !== 'number' || total_time_spent < 0) {
+      throw new BadRequestException('Invalid total_time_spent value');
+    }
+
+    // Mảng các model người dùng có total_time_spent
+    const userRoles: (
+      | Model<Admin>
+      | Model<Customer>
+      | Model<RestaurantOwner>
+    )[] = [this.adminModel, this.customerModel, this.restaurantOwnerModel];
+
+    let account: any = null;
+
+    for (const model of userRoles) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      account = await (model as Model<User>).findById(id);
+      if (account) break;
+    }
+
+    if (!account) {
+      throw new BadRequestException('Account not found');
+    }
+
+    // Cập nhật total_time_spent cho tài khoản tìm thấy
+    account.total_time_spent = total_time_spent;
+    await account.save();
+    return { message: `Update usage time successfully` };
   }
 }

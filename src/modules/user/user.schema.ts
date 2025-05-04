@@ -33,5 +33,11 @@ export class User extends Document {
     default: [],
   })
   conversation: MongooseSchema.Types.ObjectId[];
+
+  @Prop({ default: 0 })
+  total_time_spent: number;
+
+  @Prop({ default: 0 })
+  total_logins: number;
 }
 export const UserSchema = SchemaFactory.createForClass(User);
