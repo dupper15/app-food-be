@@ -1,12 +1,15 @@
 import { InjectModel } from '@nestjs/mongoose';
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Restaurant } from 'src/modules/restaurant/restaurant.schema';
 import { CreateRestaurantDto } from './dto/create-restaurant.dto';
 import { RestaurantOwner } from '../restaurant-owner/restaurant-owner.schema';
 import { UploadService } from '../upload/upload.service';
 import { EditRestaurantDto } from './dto/edit-restaurant.dto';
-
+import { TfIdf } from 'natural';
+import cosineSimilarity from 'compute-cosine-similarity';
+import { OrderService } from '../order/order.service';
+import { DishService } from '../dish/dish.service';
 @Injectable()
 export class RestaurantService {
   constructor(
@@ -15,6 +18,8 @@ export class RestaurantService {
     @InjectModel(RestaurantOwner.name)
     private readonly restaurantOwnerModel: Model<RestaurantOwner>,
     private readonly uploadService: UploadService,
+    private readonly orderService: OrderService,
+    private readonly dishService: DishService,
   ) {}
   async create(createRestaurantDto: CreateRestaurantDto) {
     const { owner_id, name, description, address, banners } =
@@ -101,10 +106,13 @@ export class RestaurantService {
       .exec();
   }
   async fetchForYouRestaurantByUserId(id: string): Promise<Restaurant[]> {
-    return this.restaurantModel
-      .find()
-      .populate({ path: 'owner_id', select: 'avatar phone' })
-      .exec();
+    const userDish = await this.orderService.getOrderedDishesByCustomerId(id);
+    const allDishes = await this.dishService.fetchAllDishNameAndId();
+
+    const recommendedDishes = this.getRcmDish(userDish, allDishes, 20);
+    const restaurant = this.fetchRestaurantsByDishes(recommendedDishes);
+
+    return restaurant;
   }
   async fetchNearRestaurantByUserId(id: string): Promise<Restaurant[]> {
     return this.restaurantModel
@@ -123,5 +131,96 @@ export class RestaurantService {
       .find()
       .populate({ path: 'owner_id', select: 'avatar phone' })
       .exec();
+  }
+  getRcmDish(
+    userDishes: { _id: string; name: string; restaurant_id: string }[],
+    allDishes: { _id: string; name: string; restaurant_id: string }[],
+    topN = 3,
+  ): { _id: string; name: string; restaurant_id: string }[] {
+    const tfidf = new TfIdf();
+
+    allDishes.forEach((dish) => {
+      tfidf.addDocument(this.normalize(dish.name));
+    });
+
+    const userVectors = userDishes.map((dish) => {
+      const tempTfidf = new TfIdf();
+      tempTfidf.addDocument(this.normalize(dish.name));
+      return this.getTfIdfVector(tempTfidf, 0, tfidf);
+    });
+
+    const userProfileVector = this.averageVectors(userVectors);
+
+    const recommended: {
+      dish: { _id: string; name: string; restaurant_id: string };
+      score: number;
+    }[] = [];
+
+    allDishes.forEach((dish, index) => {
+      if (userDishes.some((ud) => ud._id === dish._id)) return;
+
+      const dishVector = this.getTfIdfVector(tfidf, index, tfidf);
+      let score = cosineSimilarity(userProfileVector, dishVector);
+      if (!score) score = 0;
+      recommended.push({
+        dish: {
+          _id: dish._id,
+          name: dish.name,
+          restaurant_id: dish.restaurant_id,
+        },
+        score,
+      });
+    });
+    return recommended
+      .sort((a, b) => b.score - a.score)
+      .slice(0, topN)
+      .map((r) => r.dish);
+  }
+
+  getTfIdfVector(tfidf: TfIdf, docIndex: number, ref: TfIdf): number[] {
+    const terms = tfidf.listTerms(docIndex);
+
+    const allTermsSet = new Set<string>();
+    ref.documents.forEach((doc) => {
+      Object.keys(doc).forEach((term) => allTermsSet.add(term));
+    });
+    const allTerms = Array.from(allTermsSet);
+
+    const vector = allTerms.map(
+      (term) => terms.find((t) => t.term === term)?.tfidf || 0,
+    );
+
+    return vector;
+  }
+
+  averageVectors(vectors: number[][]): number[] {
+    const len = vectors[0].length;
+    const sum = Array(len).fill(0);
+
+    vectors.forEach((vec) => {
+      vec.forEach((val, i) => {
+        sum[i] += val;
+      });
+    });
+
+    return sum.map((val) => val / vectors.length);
+  }
+  normalize(text: string) {
+    return text
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase();
+  }
+  async fetchRestaurantsByDishes(
+    dishes: { _id: string; name: string; restaurant_id: string }[],
+  ): Promise<Restaurant[]> {
+    const uniqueIds = Array.from(new Set(dishes.map((d) => d.restaurant_id)));
+
+    const restaurants = await this.restaurantModel
+      .find({ _id: { $in: uniqueIds } })
+      .populate({ path: 'owner_id', select: 'avatar phone' })
+      .exec();
+
+    return restaurants;
   }
 }

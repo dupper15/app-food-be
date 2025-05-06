@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Dish, DishSchema } from './dish.schema';
 import { DishController } from './dish.controller';
@@ -15,7 +15,7 @@ import { UploadModule } from '../upload/upload.module';
         schema: DishSchema,
       },
     ]),
-    RestaurantModule,
+    forwardRef(() => RestaurantModule),
     ToppingModule,
     UploadModule,
   ],

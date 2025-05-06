@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { ToppingService } from './topping.service';
 import { ToppingController } from './topping.controller';
 import { Topping, ToppingSchema } from './topping.schema';
@@ -13,7 +13,7 @@ import { RestaurantModule } from '../restaurant/restaurant.module';
         schema: ToppingSchema,
       },
     ]),
-    RestaurantModule,
+    forwardRef(() => RestaurantModule),
   ],
   exports: [MongooseModule, ToppingService],
   providers: [ToppingService],
