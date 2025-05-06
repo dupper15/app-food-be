@@ -10,6 +10,7 @@ import { UploadModule } from '../upload/upload.module';
 import { RestaurantOwnerModule } from '../restaurant-owner/restaurant-owner.module';
 import { OrderModule } from '../order/order.module';
 import { DishModule } from '../dish/dish.module';
+import { VoucherModule } from '../voucher/voucher.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { DishModule } from '../dish/dish.module';
     RestaurantOwnerModule,
     UploadModule,
     DishModule,
+    VoucherModule,
     forwardRef(() => OrderModule),
   ],
   providers: [RestaurantService],

@@ -1,6 +1,6 @@
 import { InjectModel } from '@nestjs/mongoose';
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Model, Types } from 'mongoose';
+import { Model } from 'mongoose';
 import { Restaurant } from 'src/modules/restaurant/restaurant.schema';
 import { CreateRestaurantDto } from './dto/create-restaurant.dto';
 import { RestaurantOwner } from '../restaurant-owner/restaurant-owner.schema';
@@ -10,6 +10,7 @@ import { TfIdf } from 'natural';
 import cosineSimilarity from 'compute-cosine-similarity';
 import { OrderService } from '../order/order.service';
 import { DishService } from '../dish/dish.service';
+import { Voucher } from '../voucher/voucher.schema';
 @Injectable()
 export class RestaurantService {
   constructor(
@@ -17,6 +18,8 @@ export class RestaurantService {
     private readonly restaurantModel: Model<Restaurant>,
     @InjectModel(RestaurantOwner.name)
     private readonly restaurantOwnerModel: Model<RestaurantOwner>,
+    @InjectModel(Voucher.name)
+    private readonly voucherModel: Model<Voucher>,
     private readonly uploadService: UploadService,
     private readonly orderService: OrderService,
     private readonly dishService: DishService,
@@ -93,10 +96,10 @@ export class RestaurantService {
   }
 
   async fetchHistoryRestaurantByUserId(id: string): Promise<Restaurant[]> {
-    return this.restaurantModel
-      .find()
-      .populate({ path: 'owner_id', select: 'avatar phone' })
-      .exec();
+    const userDish = await this.orderService.getOrderedDishesByCustomerId(id);
+    const restaurant = this.fetchRestaurantsByDishes(userDish);
+
+    return restaurant;
   }
 
   async fetchRcmRestaurantByUserId(id: string): Promise<Restaurant[]> {
@@ -111,7 +114,6 @@ export class RestaurantService {
 
     const recommendedDishes = this.getRcmDish(userDish, allDishes, 20);
     const restaurant = this.fetchRestaurantsByDishes(recommendedDishes);
-
     return restaurant;
   }
   async fetchNearRestaurantByUserId(id: string): Promise<Restaurant[]> {
@@ -121,16 +123,62 @@ export class RestaurantService {
       .exec();
   }
   async fetchMultipleDealsRestaurant(): Promise<Restaurant[]> {
-    return this.restaurantModel
-      .find()
+    const restaurantIds = await this.voucherModel.aggregate([
+      {
+        $match: {
+          restaurant_id: { $exists: true, $ne: null },
+        },
+      },
+      {
+        $addFields: {
+          sortValue: {
+            $cond: [
+              { $ifNull: ['$value', false] },
+              '$value',
+              { $ifNull: ['$max', 0] },
+            ],
+          },
+        },
+      },
+      {
+        $sort: {
+          restaurant_id: 1,
+          sortValue: -1,
+        },
+      },
+      {
+        $group: {
+          _id: '$restaurant_id',
+          topVoucher: { $first: '$$ROOT' },
+        },
+      },
+      {
+        $sort: {
+          'topVoucher.sortValue': -1,
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          restaurant_id: '$_id',
+        },
+      },
+    ]);
+    const restaurantIdsArray = restaurantIds.map(
+      (restaurant: { restaurant_id: string }) => restaurant.restaurant_id,
+    );
+    const restaurants = await this.restaurantModel
+      .find({ _id: { $in: restaurantIdsArray } })
       .populate({ path: 'owner_id', select: 'avatar phone' })
       .exec();
+    return restaurants;
   }
   async fetchMultipleBuyerRestaurant(): Promise<Restaurant[]> {
-    return this.restaurantModel
-      .find()
-      .populate({ path: 'owner_id', select: 'avatar phone' })
+    const restaurants = await this.restaurantModel
+      .find({})
+      .sort({ total_orders: -1 })
       .exec();
+    return restaurants;
   }
   getRcmDish(
     userDishes: { _id: string; name: string; restaurant_id: string }[],
