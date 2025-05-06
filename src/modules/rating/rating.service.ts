@@ -68,4 +68,18 @@ export class RatingService {
     if (!rating) throw new NotFoundException('Rating not found');
     return rating;
   }
+
+  async fetchAverage(restaurantId: string): Promise<number> {
+    const ratings = await this.ratingModel
+      .find({ restaurant_id: restaurantId })
+      .exec();
+    if (!ratings) throw new NotFoundException('Rating not found');
+
+    const totalRating: number = ratings.reduce(
+      (acc: number, rating) => acc + (rating.rating ?? 0),
+      0,
+    );
+    const averageRating = totalRating / ratings.length;
+    return averageRating || 0;
+  }
 }

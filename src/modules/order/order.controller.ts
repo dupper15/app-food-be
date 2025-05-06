@@ -85,4 +85,26 @@ export class OrderController {
   async updateStatusOrderController(@Param('id') id: string) {
     return await this.orderService.updateStatusOrder(id);
   }
+
+  @Get('fetch-total-revenue/:id')
+  async fetchTotalRevenueByRestaurantController(
+    @Param('id') restaurantId: string,
+  ) {
+    return await this.orderService.fetchTotalRevenueByRestaurant(restaurantId);
+  }
+
+  @Get('fetch-order-rate/:id')
+  async fetchOrderRateController(@Param('id') restaurantId: string) {
+    return await this.orderService.fetchOrderRate(restaurantId);
+  }
+
+  @Get('fetch-loyal-customer/:id')
+  async fetchLoyalCustomerController(@Param('id') restaurantId: string) {
+    return await this.orderService.fetchLoyalCustomer(restaurantId);
+  }
+
+  @Get('fetch-weekly-revenue/:id')
+  async fetchWeeklyRevenueController(@Param('id') restaurantId: string) {
+    return await this.orderService.fetchWeeklyRevenue(restaurantId);
+  }
 }
