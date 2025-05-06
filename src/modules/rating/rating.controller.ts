@@ -1,4 +1,5 @@
-import {  Controller,
+import {
+  Controller,
   Post,
   Get,
   Delete,
@@ -47,5 +48,12 @@ export class RatingController {
   @Delete('delete/:id')
   async deleteRating(@Param('id') id: string): Promise<{ msg: string }> {
     return this.ratingService.deleteRating(id);
+  }
+
+  @Get('average/:id')
+  async fetchAverageController(
+    @Param('id') restaurantId: string,
+  ): Promise<number> {
+    return await this.ratingService.fetchAverage(restaurantId);
   }
 }
