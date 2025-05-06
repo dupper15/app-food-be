@@ -8,6 +8,7 @@ import { Customer } from '../customer/customer.schema';
 import { OrderItem } from '../order-item/orderItem.schema';
 import { Cart } from '../cart/cart.schema';
 import { HistoryService } from '../history/history.service';
+import { subMonths, startOfMonth, endOfMonth } from 'date-fns';
 
 @Injectable()
 export class OrderService {
@@ -276,5 +277,176 @@ export class OrderService {
     }
     await order.save();
     return order;
+  }
+
+  async fetchTotalRevenueByRestaurant(restaurantId: string): Promise<{
+    totalRevenue: number;
+    totalOrders: number;
+    percentageRevenue: number;
+  }> {
+    const now = new Date();
+
+    const startCurrentMonth = startOfMonth(now);
+    const endCurrentMonth = endOfMonth(now);
+
+    const startLastMonth = startOfMonth(subMonths(now, 1));
+    const endLastMonth = endOfMonth(subMonths(now, 1));
+
+    const currentMonthOrders = await this.orderModel
+      .find({
+        restaurant_id: restaurantId,
+        status: 'Completed',
+        createdAt: { $gte: startCurrentMonth, $lte: endCurrentMonth },
+      })
+      .exec();
+
+    const lastMonthOrders = await this.orderModel
+      .find({
+        restaurant_id: restaurantId,
+        status: 'Completed',
+        createdAt: { $gte: startLastMonth, $lte: endLastMonth },
+      })
+      .exec();
+
+    const currentRevenue = currentMonthOrders.reduce(
+      (sum, order) => sum + order.total_price,
+      0,
+    );
+    const lastMonthRevenue = lastMonthOrders.reduce(
+      (sum, order) => sum + order.total_price,
+      0,
+    );
+    const percentageRevenue =
+      (currentRevenue - lastMonthRevenue) / lastMonthRevenue;
+    return {
+      totalRevenue: currentRevenue,
+      totalOrders: currentMonthOrders.length,
+      percentageRevenue,
+    };
+  }
+
+  async fetchOrderRate(restaurantId: string): Promise<{
+    totalSuccessful: number;
+    totalFailed: number;
+    successRate: number;
+  }> {
+    const successOrders = await this.orderModel
+      .find({
+        restaurant_id: restaurantId,
+        status: 'Completed',
+      })
+      .exec();
+
+    const failOrders = await this.orderModel
+      .find({
+        restaurant_id: restaurantId,
+        status: 'Cancel',
+      })
+      .exec();
+
+    const rate =
+      (successOrders.length * 100) / (successOrders.length + failOrders.length);
+
+    return {
+      totalSuccessful: successOrders.length,
+      totalFailed: failOrders.length,
+      successRate: rate,
+    };
+  }
+
+  async fetchLoyalCustomer(restaurantId: string): Promise<
+    {
+      customerName: string;
+      totalOrders: number;
+      totalSpent: number;
+    }[]
+  > {
+    const now = new Date();
+    const startCurrentMonth = startOfMonth(now);
+    const endCurrentMonth = endOfMonth(now);
+
+    const currentMonthOrders = await this.orderModel
+      .find({
+        restaurant_id: restaurantId,
+        status: 'Completed',
+        createdAt: { $gte: startCurrentMonth, $lte: endCurrentMonth },
+      })
+      .populate('customer_id', 'name')
+      .exec();
+
+    const customerStatsMap = new Map<
+      ObjectId,
+      { customerName: string; totalOrders: number; totalSpent: number }
+    >();
+
+    for (const order of currentMonthOrders) {
+      const customerId = order.customer_id;
+      const customer = await this.customerModel.findById(customerId);
+      const customerName = customer?.name || 'Unknown Customer';
+
+      if (!customerStatsMap.has(customerId)) {
+        customerStatsMap.set(customerId, {
+          customerName,
+          totalOrders: 1,
+          totalSpent: order.total_price,
+        });
+      } else {
+        const stats = customerStatsMap.get(customerId)!;
+        stats.totalOrders += 1;
+        stats.totalSpent += order.total_price;
+      }
+    }
+
+    return Array.from(customerStatsMap.values());
+  }
+
+  async fetchWeeklyRevenue(
+    restaurantId: string,
+  ): Promise<{ date: string; total: number; day: string }[]> {
+    const end = new Date();
+    const start = new Date();
+    start.setDate(end.getDate() - 6); // Lấy 7 ngày gần nhất
+
+    const orders = await this.orderModel.aggregate([
+      {
+        $match: {
+          restaurant_id: restaurantId,
+          status: 'Completed',
+          createdAt: { $gte: start, $lte: end },
+        },
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: '%Y-%m-%d', date: '$createdAt' },
+          },
+          total: { $sum: '$total_price' },
+        },
+      },
+      {
+        $sort: { _id: 1 },
+      },
+    ]);
+
+    const revenueMap = new Map(orders.map((o) => [o._id, o.total]));
+
+    const result: { date: string; total: number; day: string }[] = [];
+
+    for (let i = 6; i >= 0; i--) {
+      const current = new Date();
+      current.setDate(end.getDate() - i);
+      const dateStr = current.toISOString().split('T')[0]; // YYYY-MM-DD
+      const dayShort = current.toLocaleDateString('en-US', {
+        weekday: 'short',
+      });
+
+      result.push({
+        date: dateStr,
+        total: revenueMap.get(dateStr) || 0,
+        day: dayShort,
+      });
+    }
+
+    return result;
   }
 }

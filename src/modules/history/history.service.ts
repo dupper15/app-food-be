@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { History, HistoryDocument } from './history.schema';
@@ -31,30 +31,31 @@ export class HistoryService {
       .findById(id)
       .populate({
         path: 'order_id',
-        select: 'status restaurant_id array_item',
-        populate: {
-          path: 'array_item',
-          select: 'dish_id quantity topping',
-          populate: [
-            {
-              path: 'dish_id',
-              select: 'name price',
-            },
-            {
-              path: 'topping',
-              select: 'name price',
-            },
-          ],
-        },
+        select: 'status restaurant_id array_item voucher_id used_point',
+        populate: [
+          {
+            path: 'array_item',
+            select: 'dish_id quantity topping',
+            populate: [
+              { path: 'dish_id', select: 'name price' },
+              { path: 'topping', select: 'name price' },
+            ],
+          },
+          {
+            path: 'voucher_id',
+            select: 'value',
+          },
+        ],
       })
       .populate({
         path: 'customer_id',
         select: 'name avatar',
       })
+      .lean() // Optional: nếu bạn muốn lấy plain object thay vì Document
       .exec();
 
     if (!history) {
-      throw new Error('History not found');
+      throw new NotFoundException('History not found');
     }
 
     return history;
