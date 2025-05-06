@@ -114,4 +114,18 @@ export class DishService {
 
     return dishByRestaurant;
   }
+  async fetchAllDishNameAndId() {
+    const dishByRestaurant = await this.dishModel.find({}).exec();
+    if (!dishByRestaurant || dishByRestaurant.length === 0) {
+      throw new BadRequestException(
+        'No dishes found for this category in the specified restaurant',
+      );
+    }
+
+    return dishByRestaurant.map((dish) => ({
+      _id: dish._id.toString(),
+      name: dish.name,
+      restaurant_id: dish.restaurant_id.toString(),
+    }));
+  }
 }

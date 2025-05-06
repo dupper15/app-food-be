@@ -135,7 +135,7 @@ export class OrderService {
         )
       : 0;
 
-    // Tạo lịch sử đơn hàng sau khi hủy
+    // Tạo lịch sử ơn hàng sau khi hủy
     await this.historyService.createHistory({
       order_id: order._id.toString(),
       customer_id: order.customer_id.toString(),
@@ -278,6 +278,45 @@ export class OrderService {
     await order.save();
     return order;
   }
+  async getOrderedDishesByCustomerId(userId: string) {
+    const orders = await this.orderModel
+      .find({ customer_id: userId })
+      .populate({
+        path: 'array_item',
+        populate: {
+          path: 'dish_id',
+          model: 'Dish',
+          select: 'name _id restaurant_id',
+        },
+      })
+      .sort({ createdAt: -1 });
+
+    if (!orders || orders.length === 0) {
+      throw new BadRequestException('No order found');
+    }
+
+    const dishes: { _id: string; name: string; restaurant_id: string }[] = [];
+
+    for (const order of orders) {
+      for (const item of order.array_item) {
+        const dish = item['dish_id'] as {
+          _id: string;
+          name: string;
+          restaurant_id: string;
+        };
+        if (dish && dish._id && dish.name) {
+          if (!dishes.find((d) => d._id === dish._id.toString())) {
+            dishes.push({
+              _id: dish._id.toString(),
+              name: dish.name,
+              restaurant_id: dish.restaurant_id.toString(),
+            });
+          }
+        }
+      }
+    }
+    return dishes;
+ }
 
   async fetchTotalRevenueByRestaurant(restaurantId: string): Promise<{
     totalRevenue: number;
