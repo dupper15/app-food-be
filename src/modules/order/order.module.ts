@@ -8,6 +8,7 @@ import { CustomerModule } from '../customer/customer.module';
 import { OrderItemModule } from '../order-item/orderItem.module';
 import { CartModule } from '../cart/cart.module';
 import { HistoryModule } from '../history/history.module';
+import { RatingModule } from '../rating/rating.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { HistoryModule } from '../history/history.module';
     OrderItemModule,
     CartModule,
     HistoryModule,
+    RatingModule,
   ],
   controllers: [OrderController],
   providers: [OrderService],

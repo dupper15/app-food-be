@@ -1,5 +1,4 @@
-import { InjectModel } from '@nestjs/mongoose';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';import { Injectable, NotFoundException } from '@nestjs/common';
 import { Model } from 'mongoose';
 import { Restaurant } from 'src/modules/restaurant/restaurant.schema';
 import { CreateRestaurantDto } from './dto/create-restaurant.dto';
@@ -181,7 +180,12 @@ export class RestaurantService {
     return restaurants;
   }
   getRcmDish(
-    userDishes: { _id: string; name: string; restaurant_id: string }[],
+    userDishes: {
+      _id: string;
+      name: string;
+      restaurant_id: string;
+      rating: number;
+    }[],
     allDishes: { _id: string; name: string; restaurant_id: string }[],
     topN = 3,
   ): { _id: string; name: string; restaurant_id: string }[] {
@@ -190,11 +194,46 @@ export class RestaurantService {
     allDishes.forEach((dish) => {
       tfidf.addDocument(this.normalize(dish.name));
     });
+    const userDishMap = new Map<
+      string,
+      {
+        _id: string;
+        name: string;
+        restaurant_id: string;
+        count: number;
+        totalRating: number;
+      }
+    >();
 
-    const userVectors = userDishes.map((dish) => {
+    userDishes.forEach((dish) => {
+      const key = dish._id;
+      if (!userDishMap.has(key)) {
+        userDishMap.set(key, {
+          _id: dish._id,
+          name: dish.name,
+          restaurant_id: dish.restaurant_id,
+          count: 1,
+          totalRating: dish.rating,
+        });
+      } else {
+        const existing = userDishMap.get(key)!;
+        existing.count += 1;
+        existing.totalRating += dish.rating;
+      }
+    });
+
+    const userDishTemp = Array.from(userDishMap.values()).map((d) => ({
+      ...d,
+      avgRating: d.totalRating / d.count,
+    }));
+    const userVectors = userDishTemp.map((dish) => {
       const tempTfidf = new TfIdf();
       tempTfidf.addDocument(this.normalize(dish.name));
-      return this.getTfIdfVector(tempTfidf, 0, tfidf);
+      const vector = this.getTfIdfVector(tempTfidf, 0, tfidf);
+
+      const weight = dish.count * dish.avgRating;
+
+      return vector.map((v) => v * weight);
     });
 
     const userProfileVector = this.averageVectors(userVectors);
@@ -253,11 +292,41 @@ export class RestaurantService {
 
     return sum.map((val) => val / vectors.length);
   }
+  customStopWords = [
+    'la',
+    'co',
+    'voi',
+    'va',
+    'cua',
+    'nha',
+    'lam',
+    'truyen',
+    'thong',
+    'dac',
+    'biet',
+    'mon',
+    'ngon',
+    'an',
+  ];
+
+  removeVietnameseStopwords(words: string[], stopWords: string[]) {
+    return words.filter((word) => !stopWords.includes(word));
+  }
   normalize(text: string) {
-    return text
+    const normalized = text
+      .toLowerCase()
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
-      .toLowerCase();
+      .replace(/đ/g, 'd')
+      .replace(/[^a-zA-Z0-9\s]/g, '')
+      .trim();
+
+    const words = normalized.split(/\s+/);
+    const filtered = this.removeVietnameseStopwords(
+      words,
+      this.customStopWords,
+    );
+    return filtered.join(' ');
   }
   async fetchRestaurantsByDishes(
     dishes: { _id: string; name: string; restaurant_id: string }[],

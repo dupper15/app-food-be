@@ -54,7 +54,7 @@ export class SearchService {
         { name: '_search_category', weight: 0.7 },
         { name: '_search_restaurant', weight: 0.5 },
       ],
-      threshold: 0.4,
+      threshold: 0.5,
     });
 
     const result = fuse.search(query);
