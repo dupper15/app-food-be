@@ -9,6 +9,7 @@ import { OrderItem } from '../order-item/orderItem.schema';
 import { Cart } from '../cart/cart.schema';
 import { HistoryService } from '../history/history.service';
 import { subMonths, startOfMonth, endOfMonth } from 'date-fns';
+import { Rating } from '../rating/rating.schema';
 
 @Injectable()
 export class OrderService {
@@ -19,6 +20,8 @@ export class OrderService {
     @InjectModel(OrderItem.name)
     private readonly orderItemModel: Model<OrderItem>,
     @InjectModel(Cart.name) private readonly cartModel: Model<Cart>,
+    @InjectModel(Rating.name) private readonly ratingModel: Model<Rating>,
+
     private readonly historyService: HistoryService,
   ) {}
 
@@ -279,6 +282,11 @@ export class OrderService {
     return order;
   }
   async getOrderedDishesByCustomerId(userId: string) {
+    const ratings = await this.ratingModel
+      .find({ customer_id: userId })
+      .select('order_id rating')
+      .exec();
+
     const orders = await this.orderModel
       .find({ customer_id: userId })
       .populate({
@@ -295,9 +303,19 @@ export class OrderService {
       throw new BadRequestException('No order found');
     }
 
-    const dishes: { _id: string; name: string; restaurant_id: string }[] = [];
+    const dishes: {
+      _id: string;
+      name: string;
+      restaurant_id: string;
+      rating: number;
+    }[] = [];
 
     for (const order of orders) {
+      const ratingRecord = ratings.find(
+        (r) => r.order_id.toString() === order._id.toString(),
+      );
+      const rating = ratingRecord ? ratingRecord.rating : 3;
+
       for (const item of order.array_item) {
         const dish = item['dish_id'] as {
           _id: string;
@@ -310,13 +328,15 @@ export class OrderService {
               _id: dish._id.toString(),
               name: dish.name,
               restaurant_id: dish.restaurant_id.toString(),
+              rating: rating,
             });
           }
         }
       }
     }
+
     return dishes;
- }
+  }
 
   async fetchTotalRevenueByRestaurant(restaurantId: string): Promise<{
     totalRevenue: number;
