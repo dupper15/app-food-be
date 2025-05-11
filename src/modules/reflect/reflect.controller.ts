@@ -1,15 +1,50 @@
-import { Controller, Post, Get, Param, Body } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Param,
+  Body,
+  UseInterceptors,
+  UploadedFiles,
+} from '@nestjs/common';
 import { ReflectService } from './reflect.service';
 import { Reflect } from './reflect.schema';
 import { CreateReflectDto } from './dto/createReflect';
+import { FilesInterceptor } from '@nestjs/platform-express';
+import { UploadService } from '../upload/upload.service';
 
 @Controller('reflect')
 export class ReflectController {
-  constructor(private readonly reflectService: ReflectService) {}
+  constructor(
+    private readonly reflectService: ReflectService,
+    private readonly uploadService: UploadService,
+  ) {}
 
   @Post('create')
-  async createReflect(@Body() data: CreateReflectDto): Promise<Reflect> {
-    return this.reflectService.createReflect(data);
+  @UseInterceptors(FilesInterceptor('reflects'))
+  async createReflect(
+    @Body() data: any,
+    @UploadedFiles() reflects: Express.Multer.File[],
+  ): Promise<Reflect> {
+    const updateData = { ...data };
+
+    let reflectsRemaining: string[] = [];
+
+    if (Array.isArray(data.reflectsRemaining)) {
+      reflectsRemaining = data.reflectsRemaining;
+    } else if (typeof data.reflectsRemaining === 'string') {
+      // Trường hợp chỉ có 1 ảnh vẫn cần đưa về mảng
+      reflectsRemaining = [data.reflectsRemaining];
+    }
+
+    let newReflectsUrls: string[] = [];
+    if (reflects && reflects.length > 0) {
+      newReflectsUrls = await this.uploadService.uploadMultipleImages(reflects);
+    }
+
+    updateData.images = [...reflectsRemaining, ...newReflectsUrls];
+
+    return this.reflectService.createReflect(updateData);
   }
 
   @Get('all')
