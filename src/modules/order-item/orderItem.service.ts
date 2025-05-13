@@ -51,7 +51,7 @@ export class OrderItemService {
     const user_id = new Types.ObjectId(userId.toString());
     const dish_id = new Types.ObjectId(dishId.toString());
     const orderItem = await this.orderItemModel
-      .findOne({ user_id, dish_id })
+      .findOne({ user_id, dish_id, is_paid: false })
       .populate('topping')
       .exec();
     if (!orderItem) {

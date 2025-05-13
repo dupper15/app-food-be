@@ -1,5 +1,4 @@
-import {
-  Controller,
+import {  Controller,
   Post,
   Get,
   Param,
@@ -9,7 +8,6 @@ import {
 } from '@nestjs/common';
 import { ReflectService } from './reflect.service';
 import { Reflect } from './reflect.schema';
-import { CreateReflectDto } from './dto/createReflect';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { UploadService } from '../upload/upload.service';
 
@@ -33,7 +31,6 @@ export class ReflectController {
     if (Array.isArray(data.reflectsRemaining)) {
       reflectsRemaining = data.reflectsRemaining;
     } else if (typeof data.reflectsRemaining === 'string') {
-      // Trường hợp chỉ có 1 ảnh vẫn cần đưa về mảng
       reflectsRemaining = [data.reflectsRemaining];
     }
 

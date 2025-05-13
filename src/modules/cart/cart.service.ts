@@ -71,7 +71,9 @@ export class CartService {
         ],
       })
       .populate('restaurant_id', 'name')
+      .lean()
       .exec();
+
     return carts;
   }
   async deleteOrderItem(userId: string, orderItemId: string) {
