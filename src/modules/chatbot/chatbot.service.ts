@@ -54,7 +54,6 @@ export class ChatBotService {
       const context = JSON.parse(
         (await redisService.get(`user:${userId}:context`)) || '[]',
       );
-      console.log('Context:', context);
       const AImodel = this.getModel();
 
       const prompt = `
@@ -89,6 +88,7 @@ Dưới đây là ngữ cảnh cuộc trò chuyện trước đó :
 ${JSON.stringify(context, null, 2)}
 
 ⚠️ Rất quan trọng:
+- Khi người dùng hỏi các câu hỏi như hôm nay ăn gì, hoặc liên quan đến chuyện người dùng cần tư vấn ăn gì (như kiểu tôi đói quá, tôi không biết ăn gì hết) hãy gọi hàm recommend_dish_by_time
 - Nếu người dùng yêu cầu thao tác với **món ăn cụ thể**, ví dụ: "cơm sườn", thì hãy **tìm kiếm theo tên món** trong context để lấy 'dish_id'.
 - Nếu người dùng nói “món thứ 2” hay “món có phô mai”, hãy phân tích danh sách món trong context để hiểu người dùng đang nói tới món nào.
 - **Không được hỏi lại người dùng về id** nếu đã có món đó trong context.
@@ -102,6 +102,8 @@ ${JSON.stringify(context, null, 2)}
 - Nếu người dùng chọn xem lịch sử đơn hàng, hãy hỏi họ có muốn đặt lại đơn hàng không.
 - Khi có nhiều cases khiến bạn không phân vân, hãy hỏi người dùng để biết chính xác hành động cần làm (ví dụ: có nhiều đơn hàng cũ hoặc nhiều món ăn trong giỏ hàng, có thể hỏi họ muốn đặt lại đơn thứ mấy, đặt đơn có món gì).
 - Nếu người dùng chưa hỏi những câu như hôm nay ăn gì (vì khi đó context sẽ không có các object dish, nhưng nếu trước đó họ có hỏi rồi thì khỏi), hãy lừa và dắt họ để họ phải hỏi bạn về món ăn, ví dụ: "Hôm nay ăn gì?" hoặc "Gợi ý món ăn cho tôi".
+- Không được đem nội dung context ra ngoài, chỉ được sử dụng để phân tích và trả lời câu hỏi của người dùng. (ví dụ: không được lấy lịch sử đặt món, giỏ hàng của người dùng ra ngoài).
+- Trả lời với câu trả lời mở, ví dụ như gợi ý món ăn cho người dùng thì đừng nói rõ ra món cay, món mặn, món cụ thể.
 `;
 
       const result = (await AImodel).generateContent(prompt);
@@ -110,7 +112,6 @@ ${JSON.stringify(context, null, 2)}
         .text()
         .replace(/```json|```/g, '')
         .trim();
-      console.log('Result:', cleanedText);
       const message = JSON.parse(cleanedText);
 
       // Trường hợp có yêu cầu gọi hàm
@@ -165,6 +166,7 @@ ${JSON.stringify(context, null, 2)}
     }
   }
   async callFunction(func: any, functionArgs: any) {
+    console.log('callFunction', func, functionArgs);
     switch (func.name) {
       case 'recommend_dish_by_time':
         return this.recommendDishByTime(functionArgs);
@@ -199,8 +201,23 @@ ${JSON.stringify(context, null, 2)}
   }
 
   async recommendDishByTime(args: any) {
-    return this.dishService.fetchBotDish();
+    const dishes = await this.dishService.fetchBotDish();
+    const now = new Date();
+    const vnTime = now.toLocaleString('vi-VN', {
+      timeZone: 'Asia/Ho_Chi_Minh',
+    });
+    const AImodel = this.getModel();
+    const prompt = `Bây giờ là ${vnTime}, hãy gợi ý cho tôi 10 món ăn ngon và phù hợp với thời gian này. Dưới đây là danh sách món ăn có sẵn: ${JSON.stringify(dishes)} hãy trả về cho tôi mảng các _id dạng ["123456", "789012",...] không trả lời thêm gì, chỉ cần mảng`;
+    const result = (await AImodel).generateContent(prompt);
+    const response = (await result).response
+      .text()
+      .replace(/```json|```/g, '')
+      .trim();
+    const idArray = JSON.parse(response) as string[];
+    const dishObject = await this.dishService.fetchDishById(idArray);
+    return dishObject;
   }
+
   async getToppingOfRestaurant(args: any) {
     const { restaurant_id } = args;
     const toppings = await this.toppingService.getAllTopping(restaurant_id);
@@ -218,7 +235,8 @@ ${JSON.stringify(context, null, 2)}
   async getUserCart(args: any) {
     const { user_id } = args;
     const cart = await this.cartService.getOrdersByUserId(user_id);
-    return cart;
+    const ans = JSON.stringify(cart, null, 2);
+    return ans;
   }
 
   async updateCartItem(args: any) {
@@ -252,8 +270,9 @@ ${JSON.stringify(context, null, 2)}
   async getOrderHistory(args: any) {
     const { user_id } = args;
     const orders =
-      await this.orderService.fetchSuccessfullOrderByCustomer(user_id);
-    return orders;
+      await this.orderService.fetchSuccessfullOrderByCustomerTemp(user_id);
+    const ans = JSON.stringify(orders, null, 2);
+    return ans;
   }
 
   async reorderPrevious(args: any) {
@@ -263,8 +282,10 @@ ${JSON.stringify(context, null, 2)}
   }
   async viewOngoingOrders(args: any) {
     const { user_id } = args;
-    const order = await this.orderService.fetchOngoingOrderByCustomer(user_id);
-    return order;
+    const order =
+      await this.orderService.fetchOngoingOrderByCustomerTemp(user_id);
+    const ans = JSON.stringify(order, null, 2);
+    return ans;
   }
   functions = [
     {
@@ -404,7 +425,7 @@ ${JSON.stringify(context, null, 2)}
     },
     {
       name: 'view_ongoing_orders',
-      description: 'Xem đơn hàng đang diễn ra',
+      description: 'Xem các đơn hàng hiện tại của người dùng',
       parameters: {
         type: 'object',
         properties: {

@@ -10,6 +10,7 @@ import { Cart } from '../cart/cart.schema';
 import { HistoryService } from '../history/history.service';
 import { subMonths, startOfMonth, endOfMonth } from 'date-fns';
 import { Rating } from '../rating/rating.schema';
+import path from 'path';
 
 @Injectable()
 export class OrderService {
@@ -39,7 +40,6 @@ export class OrderService {
       }
       customer.total_points -= createOrderDto.used_point;
     }
-    customer.total_points += Math.floor(createOrderDto.total_price / 100000);
     await customer.save();
     if (createOrderDto.voucher_id) {
       const voucher = await this.voucherModel.findById(
@@ -235,6 +235,36 @@ export class OrderService {
       .find({ customer_id: customerId, status: 'Success' })
       .exec();
   }
+  async fetchSuccessfullOrderByCustomerTemp(
+    customerId: ObjectId,
+  ): Promise<Order[]> {
+    return await this.orderModel
+      .find({ customer_id: customerId, status: 'Success' })
+      .populate({
+        path: 'restaurant_id',
+        select: 'name avatar',
+        populate: {
+          path: 'owner_id',
+          select: 'avatar _id',
+        },
+      })
+      .populate({
+        path: 'voucher_id',
+        select: 'value max',
+      })
+      .populate({
+        path: 'array_item',
+        select: 'dish_id quantity topping',
+        populate: {
+          path: 'dish_id',
+          select: 'name image time price',
+        },
+      })
+      .select(
+        'restaurant_id voucher_id array_item note total_price status time_receive used_point',
+      )
+      .exec();
+  }
   async fetchOngoingOrderByCustomer(customerId: ObjectId): Promise<Order[]> {
     return await this.orderModel
       .find({
@@ -246,6 +276,44 @@ export class OrderService {
           { status: 'Ready' },
         ],
       })
+      .exec();
+  }
+  async fetchOngoingOrderByCustomerTemp(
+    customerId: ObjectId,
+  ): Promise<Order[]> {
+    return await this.orderModel
+      .find({
+        customer_id: customerId,
+        $or: [
+          { status: 'Pending' },
+          { status: 'Received' },
+          { status: 'Preparing' },
+          { status: 'Ready' },
+        ],
+      })
+      .populate({
+        path: 'restaurant_id',
+        select: 'name avatar',
+        populate: {
+          path: 'owner_id',
+          select: 'avatar _id',
+        },
+      })
+      .populate({
+        path: 'voucher_id',
+        select: 'value max',
+      })
+      .populate({
+        path: 'array_item',
+        select: 'dish_id quantity topping',
+        populate: {
+          path: 'dish_id',
+          select: 'name image time price',
+        },
+      })
+      .select(
+        'restaurant_id voucher_id array_item note total_price status time_receive used_point',
+      )
       .exec();
   }
 

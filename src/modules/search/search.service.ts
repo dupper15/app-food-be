@@ -51,14 +51,13 @@ export class SearchService {
     const fuse = new Fuse(data, {
       keys: [
         { name: '_search_name', weight: 1 },
-        { name: '_search_category', weight: 0.7 },
-        { name: '_search_restaurant', weight: 0.5 },
+        { name: '_search_category', weight: 0.5 },
+        { name: '_search_restaurant', weight: 0.7 },
       ],
       threshold: 0.5,
     });
 
     const result = fuse.search(query);
-
     const matchedRestaurants = new Map<string, Restaurant>();
 
     for (const item of result) {

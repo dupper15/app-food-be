@@ -105,15 +105,30 @@ export class DishService {
     return dishByRestaurant;
   }
   async fetchBotDish(): Promise<Dish[]> {
-    const dishByRestaurant = await this.dishModel.find({}).exec();
+    const dishByRestaurant = await this.dishModel
+      .find({})
+      .select('name _id')
+      .exec();
     if (!dishByRestaurant || dishByRestaurant.length === 0) {
       throw new BadRequestException(
         'No dishes found for this category in the specified restaurant',
       );
     }
-
     return dishByRestaurant;
   }
+  async fetchDishById(dishes: string[]): Promise<Dish[]> {
+    const ans: Dish[] = [];
+
+    await Promise.all(
+      dishes.map(async (dishId) => {
+        const temp = await this.dishModel.findById(dishId);
+        if (temp) ans.push(temp);
+      }),
+    );
+
+    return ans;
+  }
+
   async fetchAllDishNameAndId() {
     const dishByRestaurant = await this.dishModel.find({}).exec();
     if (!dishByRestaurant || dishByRestaurant.length === 0) {
