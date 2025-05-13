@@ -24,6 +24,7 @@ import { OrderModule } from './modules/order/order.module';
 import { SearchModule } from './modules/search/search.module';
 import { RedisModule } from './modules/redis/redis.module';
 import { SmsModule } from './modules/sms/sms.module';
+import { RecommendModule } from './modules/recommend-system/recommend.module';
 dotenv.config();
 @Module({
   imports: [
@@ -53,6 +54,7 @@ dotenv.config();
     SearchModule,
     RedisModule,
     SmsModule,
+    RecommendModule,
   ],
   controllers: [AppController],
   providers: [],
