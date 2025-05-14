@@ -3,11 +3,14 @@ import { RecommendService } from './recommend.service';
 import { InjectModel } from '@nestjs/mongoose';
 import { Order } from '../order/order.schema';
 import { Model } from 'mongoose';
+import { Restaurant } from '../restaurant/restaurant.schema';
 
 @Controller('recommend')
 export class RecommendController {
   constructor(
     @InjectModel(Order.name) private readonly orderModel: Model<Order>,
+    @InjectModel(Restaurant.name)
+    private readonly restaurantModel: Model<Restaurant>,
     private readonly recommendService: RecommendService,
   ) {}
 
@@ -31,6 +34,14 @@ export class RecommendController {
       customerId,
       orders,
     );
-    return { result };
+    const restaurantDetails = await this.restaurantModel
+      .find({ _id: { $in: result } })
+      .populate({
+        path: 'owner_id',
+        select: 'avatar',
+      })
+      .exec();
+
+    return { result: restaurantDetails };
   }
 }
