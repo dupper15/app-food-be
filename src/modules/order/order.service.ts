@@ -10,7 +10,7 @@ import { Cart } from '../cart/cart.schema';
 import { HistoryService } from '../history/history.service';
 import { subMonths, startOfMonth, endOfMonth } from 'date-fns';
 import { Rating } from '../rating/rating.schema';
-import path from 'path';
+import { Restaurant } from '../restaurant/restaurant.schema';
 
 @Injectable()
 export class OrderService {
@@ -22,6 +22,8 @@ export class OrderService {
     private readonly orderItemModel: Model<OrderItem>,
     @InjectModel(Cart.name) private readonly cartModel: Model<Cart>,
     @InjectModel(Rating.name) private readonly ratingModel: Model<Rating>,
+    @InjectModel(Restaurant.name)
+    private readonly restaurantModel: Model<Restaurant>,
 
     private readonly historyService: HistoryService,
   ) {}
@@ -343,6 +345,24 @@ export class OrderService {
         cost: order.total_price,
         sum_dishes: sumDishes,
       });
+
+      await this.restaurantModel.findByIdAndUpdate(
+        order.restaurant_id,
+        { $inc: { total_orders: 1 } },
+        { new: true },
+      );
+
+      const additionalPoints = Math.floor(order.total_price / 100000);
+      await this.customerModel.findByIdAndUpdate(
+        order.customer_id,
+        {
+          $inc: {
+            total_orders: 1,
+            total_points: additionalPoints,
+          },
+        },
+        { new: true },
+      );
     } else {
       throw new BadRequestException('Invalid status update');
     }

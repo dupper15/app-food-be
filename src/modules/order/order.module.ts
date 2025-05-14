@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Order, OrderSchema } from './order.schema';
 import { OrderController } from './order.controller';
@@ -9,6 +9,7 @@ import { OrderItemModule } from '../order-item/orderItem.module';
 import { CartModule } from '../cart/cart.module';
 import { HistoryModule } from '../history/history.module';
 import { RatingModule } from '../rating/rating.module';
+import { RestaurantModule } from '../restaurant/restaurant.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { RatingModule } from '../rating/rating.module';
     CartModule,
     HistoryModule,
     RatingModule,
+    forwardRef(() => RestaurantModule),
   ],
   controllers: [OrderController],
   providers: [OrderService],
