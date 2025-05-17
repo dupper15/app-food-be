@@ -1,5 +1,4 @@
-import { forwardRef, Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
+import { forwardRef, Module } from '@nestjs/common';import { MongooseModule } from '@nestjs/mongoose';
 import {
   Restaurant,
   RestaurantSchema,
@@ -11,6 +10,7 @@ import { RestaurantOwnerModule } from '../restaurant-owner/restaurant-owner.modu
 import { OrderModule } from '../order/order.module';
 import { DishModule } from '../dish/dish.module';
 import { VoucherModule } from '../voucher/voucher.module';
+import { GeocodingModule } from '../geocoding/geocoding.module';
 
 @Module({
   imports: [
@@ -24,6 +24,7 @@ import { VoucherModule } from '../voucher/voucher.module';
     UploadModule,
     DishModule,
     VoucherModule,
+    GeocodingModule,
     forwardRef(() => OrderModule),
   ],
   providers: [RestaurantService],

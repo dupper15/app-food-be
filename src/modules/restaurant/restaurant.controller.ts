@@ -7,11 +7,13 @@ import {
   Get,
   Param,
   Put,
+  Query,
 } from '@nestjs/common';
 import { RestaurantService } from './restaurant.service';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { UploadService } from '../upload/upload.service';
 import { EditRestaurantDto } from './dto/edit-restaurant.dto';
+import { max } from 'class-validator';
 
 @Controller('restaurants')
 export class RestaurantController {
@@ -68,6 +70,19 @@ export class RestaurantController {
     @Body() imageUrl: string,
   ) {
     return await this.restaurantService.deleteBanner(id, imageUrl);
+  }
+
+  @Get('near')
+  async fetchNearRestaurantByLatLng(
+    @Query('lat') lat: string,
+    @Query('lng') lng: string,
+    @Query('maxDistance') maxDistance: string,
+  ) {
+    return await this.restaurantService.fetchNearRestaurantByLatLng(
+      lat,
+      lng,
+      Number(maxDistance),
+    );
   }
 
   @Get()

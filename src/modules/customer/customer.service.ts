@@ -1,5 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';import { InjectModel } from '@nestjs/mongoose';
 import { UserService } from '../user/user.service';
 import { Model, Types } from 'mongoose';
 import { JwtService } from 'src/jwt/jwt.service';
@@ -9,9 +8,12 @@ import { RegisterCustomerDto } from './dto/register-customer.dto';
 import * as bcrypt from 'bcrypt';
 import { RestaurantOwner } from './../restaurant-owner/restaurant-owner.schema';
 import { Admin } from './../admin/admin.schema';
+import { GeocodingService } from '../geocoding/geocoding.service';
 
 @Injectable()
 export class CustomerService extends UserService<Customer> {
+  private readonly logger = new Logger(CustomerService.name);
+
   constructor(
     @InjectModel(Customer.name)
     protected readonly customerModel: Model<Customer>,
@@ -20,6 +22,7 @@ export class CustomerService extends UserService<Customer> {
     @InjectModel(Admin.name) protected readonly adminModel: Model<Admin>,
     protected readonly jwtService: JwtService,
     protected readonly mailService: MailService,
+    private readonly geocodingService: GeocodingService,
   ) {
     super(
       customerModel,
@@ -108,23 +111,63 @@ export class CustomerService extends UserService<Customer> {
     if (!customer) {
       throw new BadRequestException('User not found');
     }
+
+    // Geocode the address
+    const coordinates = await this.geocodingService.geocodeAddress(address);
+
+    // Add address to the address array
     customer.address.push(address);
+
+    // Add coordinates to the addressCoordinates array if geocoding was successful
+    if (coordinates) {
+      if (!customer.addressCoordinates) {
+        customer.addressCoordinates = [];
+      }
+
+      customer.addressCoordinates.push({
+        address,
+        latitude: coordinates.latitude,
+        longitude: coordinates.longitude,
+      });
+
+      this.logger.log(`Successfully geocoded address: ${address}`);
+    } else {
+      this.logger.warn(`Failed to geocode address: ${address}`);
+    }
+
     return customer.save();
   }
+
   async removeAddress(userId: string, address: string) {
     const customer = await this.customerModel.findById(userId);
     if (!customer) {
       throw new BadRequestException('User not found');
     }
+
+    // Remove from address array
     customer.address = customer.address.filter((item) => item !== address);
+
+    // Remove from addressCoordinates array if it exists
+    if (customer.addressCoordinates && customer.addressCoordinates.length > 0) {
+      customer.addressCoordinates = customer.addressCoordinates.filter(
+        (item) => item.address !== address,
+      );
+    }
+
     return customer.save();
   }
+
   async getAddresses(userId: string) {
     const customer = await this.customerModel.findById(userId);
     if (!customer) {
       throw new BadRequestException('User not found');
     }
-    return customer.address;
+
+    // Return both addresses and their coordinates if available
+    return {
+      addresses: customer.address,
+      coordinates: customer.addressCoordinates || [],
+    };
   }
   async getPoints(userId: string) {
     const customer = await this.customerModel.findById(userId);

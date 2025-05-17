@@ -1,5 +1,4 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Types } from 'mongoose';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';import { Document, Types } from 'mongoose';
 
 @Schema({ timestamps: true })
 export class Restaurant extends Document {
@@ -17,6 +16,12 @@ export class Restaurant extends Document {
 
   @Prop({ required: true })
   address: string;
+
+  @Prop({ required: false, type: Number })
+  latitude: number;
+
+  @Prop({ required: false, type: Number })
+  longitude: number;
 
   @Prop({ default: 0, required: false })
   total_orders: number;
