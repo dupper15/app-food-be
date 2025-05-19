@@ -1,5 +1,4 @@
-import { Type } from 'class-transformer';
-import {
+import { Type } from 'class-transformer';import {
   IsArray,
   IsOptional,
   IsString,
@@ -20,6 +19,14 @@ export class RegisterCustomerDto extends RegisterUserDto {
   @IsArray()
   @IsOptional()
   address?: string[];
+
+  @IsArray()
+  @IsOptional()
+  addressCoordinates?: Array<{
+    address: string;
+    latitude: number;
+    longitude: number;
+  }>;
 
   @IsOptional()
   @IsString()

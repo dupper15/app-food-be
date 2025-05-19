@@ -10,6 +10,7 @@ import { CartModule } from '../cart/cart.module';
 import { HistoryModule } from '../history/history.module';
 import { RatingModule } from '../rating/rating.module';
 import { RestaurantModule } from '../restaurant/restaurant.module';
+import { NotificationModule } from '../notification/notification.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { RestaurantModule } from '../restaurant/restaurant.module';
     HistoryModule,
     RatingModule,
     forwardRef(() => RestaurantModule),
+    NotificationModule,
   ],
   controllers: [OrderController],
   providers: [OrderService],

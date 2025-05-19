@@ -1,5 +1,4 @@
-import {
-  IsNotEmpty,
+import {  IsNotEmpty,
   IsString,
   IsOptional,
   IsArray,
@@ -41,6 +40,14 @@ export class CreateRestaurantDto {
   @IsNotEmpty()
   @IsString()
   address: string;
+
+  @IsOptional()
+  @IsNumber()
+  latitude?: number;
+
+  @IsOptional()
+  @IsNumber()
+  longitude?: number;
 
   @IsOptional()
   @IsNumber()

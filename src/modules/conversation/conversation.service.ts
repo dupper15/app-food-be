@@ -5,6 +5,7 @@ import { Model, Types } from 'mongoose';
 import { Message } from '../message/message.schema';
 import { SendMessageDto } from './dto/send-message.dto';
 import { ChatBotService } from '../chatbot/chatbot.service';
+import { ChatGateway } from '../../gateways/chat.gateway';
 
 @Injectable()
 export class ConversationService {
@@ -14,8 +15,9 @@ export class ConversationService {
     @InjectModel(Message.name)
     private readonly messageModel: Model<Message>,
     private readonly chatBotService: ChatBotService,
+    private readonly chatGateway: ChatGateway,
   ) {}
-  async sendMessage(sendMessageDto: SendMessageDto): Promise<Conversation> {
+  async sendMessage(sendMessageDto: SendMessageDto): Promise<any> {
     const { content, image, receiver_id, sender_id, _id } = sendMessageDto;
 
     if (_id) {
@@ -38,13 +40,31 @@ export class ConversationService {
       if (!conversation) {
         throw new Error('Conversation not found');
       }
+
+      // Notify connected clients about the new message
+      const messageWithDetails = await this.messageModel
+        .findById(newMessage._id)
+        .lean();
+
+      // Send the message to all users in the conversation room
+      this.chatGateway.sendMessage(_id, {
+        ...messageWithDetails,
+        conversationId: _id,
+      });
+
+      // Notify the receiver about the conversation update
+      this.chatGateway.notifyConversationUpdate(
+        new Types.ObjectId(receiver_id),
+        new Types.ObjectId(_id),
+      );
+
       return conversation;
     } else {
       const newConversation = new this.conversationModel({
         user1: sender_id,
         user2: receiver_id,
         is_seen: false,
-      });
+      }) as unknown as Conversation;
       await newConversation.save();
       const newMessage = new this.messageModel({
         sender_id,
@@ -63,6 +83,26 @@ export class ConversationService {
           },
         },
       );
+
+      const conversationId = (newConversation._id as Types.ObjectId).toString();
+
+      // Notify about the new message
+      const messageWithDetails = await this.messageModel
+        .findById(newMessage._id)
+        .lean();
+
+      // Send the message to the conversation room
+      this.chatGateway.sendMessage(new Types.ObjectId(conversationId), {
+        ...messageWithDetails,
+        conversationId,
+      });
+
+      // Notify the receiver about the conversation update
+      this.chatGateway.notifyConversationUpdate(
+        new Types.ObjectId(receiver_id),
+        new Types.ObjectId(conversationId),
+      );
+
       return newConversation;
     }
   }

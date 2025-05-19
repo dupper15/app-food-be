@@ -1,4 +1,5 @@
-import { InjectModel } from '@nestjs/mongoose';import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { Model } from 'mongoose';
 import { Restaurant } from 'src/modules/restaurant/restaurant.schema';
 import { CreateRestaurantDto } from './dto/create-restaurant.dto';
@@ -10,8 +11,12 @@ import cosineSimilarity from 'compute-cosine-similarity';
 import { OrderService } from '../order/order.service';
 import { DishService } from '../dish/dish.service';
 import { Voucher } from '../voucher/voucher.schema';
+import { GeocodingService } from '../geocoding/geocoding.service';
+
 @Injectable()
 export class RestaurantService {
+  private readonly logger = new Logger(RestaurantService.name);
+
   constructor(
     @InjectModel(Restaurant.name)
     private readonly restaurantModel: Model<Restaurant>,
@@ -22,7 +27,9 @@ export class RestaurantService {
     private readonly uploadService: UploadService,
     private readonly orderService: OrderService,
     private readonly dishService: DishService,
+    private readonly geocodingService: GeocodingService,
   ) {}
+
   async create(createRestaurantDto: CreateRestaurantDto) {
     const { owner_id, name, description, address, banners } =
       createRestaurantDto;
@@ -35,10 +42,48 @@ export class RestaurantService {
       banners,
     });
 
+    // Geocode the address
+    try {
+      const coordinates = await this.geocodingService.geocodeAddress(address);
+      if (coordinates) {
+        newRestaurant.latitude = coordinates.latitude;
+        newRestaurant.longitude = coordinates.longitude;
+        this.logger.log(
+          `Geocoded address for restaurant "${name}": ${coordinates.latitude}, ${coordinates.longitude}`,
+        );
+      }
+    } catch (error) {
+      this.logger.error(
+        `Failed to geocode address for restaurant "${name}"`,
+        error,
+      );
+    }
+
     return newRestaurant.save();
   }
 
   async edit(id: string, editData: EditRestaurantDto) {
+    // If address is being updated, try to geocode it
+    if (editData.address) {
+      try {
+        const coordinates = await this.geocodingService.geocodeAddress(
+          editData.address,
+        );
+        if (coordinates) {
+          editData.latitude = coordinates.latitude;
+          editData.longitude = coordinates.longitude;
+          this.logger.log(
+            `Geocoded updated address for restaurant ID ${id}: ${coordinates.latitude}, ${coordinates.longitude}`,
+          );
+        }
+      } catch (error) {
+        this.logger.error(
+          `Failed to geocode updated address for restaurant ID ${id}`,
+          error,
+        );
+      }
+    }
+
     const restaurant = await this.restaurantModel.findByIdAndUpdate(
       id,
       editData,
@@ -107,6 +152,7 @@ export class RestaurantService {
       .populate({ path: 'owner_id', select: 'avatar phone' })
       .exec();
   }
+
   async fetchForYouRestaurantByUserId(id: string): Promise<Restaurant[]> {
     const userDish = await this.orderService.getOrderedDishesByCustomerId(id);
     const allDishes = await this.dishService.fetchAllDishNameAndId();
@@ -115,12 +161,14 @@ export class RestaurantService {
     const restaurant = this.fetchRestaurantsByDishes(recommendedDishes);
     return restaurant;
   }
+
   async fetchNearRestaurantByUserId(id: string): Promise<Restaurant[]> {
     return this.restaurantModel
       .find()
       .populate({ path: 'owner_id', select: 'avatar phone' })
       .exec();
   }
+
   async fetchMultipleDealsRestaurant(): Promise<Restaurant[]> {
     const restaurantIds = await this.voucherModel.aggregate([
       {
@@ -172,6 +220,7 @@ export class RestaurantService {
       .exec();
     return restaurants;
   }
+
   async fetchMultipleBuyerRestaurant(): Promise<Restaurant[]> {
     const restaurants = await this.restaurantModel
       .find({})
@@ -179,6 +228,7 @@ export class RestaurantService {
       .exec();
     return restaurants;
   }
+
   getRcmDish(
     userDishes: {
       _id: string;
@@ -292,6 +342,7 @@ export class RestaurantService {
 
     return sum.map((val) => val / vectors.length);
   }
+
   customStopWords = [
     'la',
     'co',
@@ -312,6 +363,7 @@ export class RestaurantService {
   removeVietnameseStopwords(words: string[], stopWords: string[]) {
     return words.filter((word) => !stopWords.includes(word));
   }
+
   normalize(text: string) {
     const normalized = text
       .toLowerCase()
@@ -328,6 +380,7 @@ export class RestaurantService {
     );
     return filtered.join(' ');
   }
+
   async fetchRestaurantsByDishes(
     dishes: { _id: string; name: string; restaurant_id: string }[],
   ): Promise<Restaurant[]> {
@@ -339,5 +392,73 @@ export class RestaurantService {
       .exec();
 
     return restaurants;
+  }
+
+  async fetchNearRestaurantByLatLng(
+    lat: string,
+    lng: string,
+    maxDistance: number = 5,
+  ): Promise<Restaurant[]> {
+    const latitude = parseFloat(lat);
+    const longitude = parseFloat(lng);
+
+    if (isNaN(latitude) || isNaN(longitude)) {
+      throw new Error('Invalid latitude or longitude');
+    }
+
+    const allRestaurants = await this.restaurantModel
+      .find({
+        latitude: { $exists: true, $ne: null },
+        longitude: { $exists: true, $ne: null },
+      })
+      .populate({ path: 'owner_id', select: 'avatar phone' })
+      .exec();
+
+    const restaurantsWithDistance = allRestaurants.map((restaurant) => ({
+      restaurant,
+      distance: this.calculateDistance(
+        latitude,
+        longitude,
+        restaurant.latitude,
+        restaurant.longitude,
+      ),
+    }));
+
+    const filtered = restaurantsWithDistance
+      .filter((r) => r.distance <= maxDistance)
+      .sort((a, b) => a.distance - b.distance);
+
+    this.logger.log(
+      `Found ${filtered.length} restaurants within ${maxDistance}km of [${latitude}, ${longitude}]`,
+    );
+
+    return filtered.map((r) => r.restaurant);
+  }
+
+  private calculateDistance(
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number,
+  ): number {
+    const R = 6371;
+    const dLat = this.deg2rad(lat2 - lat1);
+    const dLon = this.deg2rad(lon2 - lon1);
+
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(this.deg2rad(lat1)) *
+        Math.cos(this.deg2rad(lat2)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distance = R * c;
+
+    return distance;
+  }
+
+  private deg2rad(deg: number): number {
+    return deg * (Math.PI / 180);
   }
 }
