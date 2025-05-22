@@ -1,4 +1,5 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';import { Document, Types } from 'mongoose';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Types } from 'mongoose';
 import { User } from '../user/user.schema';
 
 @Schema()
@@ -52,7 +53,7 @@ export class Customer extends User {
   @Prop({ type: [String], default: [] })
   cart: string[];
 
-  @Prop({ type: [Types.ObjectId], default: [] })
+  @Prop({ type: [Types.ObjectId], ref: 'Restaurant', default: [] })
   favorite_restaurants: Types.ObjectId[];
 
   @Prop({ type: Number, default: 0 })

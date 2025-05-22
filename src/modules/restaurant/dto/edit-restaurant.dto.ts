@@ -1,9 +1,10 @@
-import { IsNotEmpty, IsString, IsOptional, IsNumber } from 'class-validator';export class EditRestaurantDto {
-  @IsNotEmpty()
+import { IsNotEmpty, IsString, IsOptional, IsNumber } from 'class-validator';
+export class EditRestaurantDto {
+  @IsOptional()
   @IsString()
   name: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
   description: string;
 

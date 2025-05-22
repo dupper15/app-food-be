@@ -1,4 +1,5 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';import { InjectModel } from '@nestjs/mongoose';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
 import { UserService } from '../user/user.service';
 import { Model, Types } from 'mongoose';
 import { JwtService } from 'src/jwt/jwt.service';
