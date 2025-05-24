@@ -82,8 +82,11 @@ export class OrderController {
   }
 
   @Patch('update-status/:id')
-  async updateStatusOrderController(@Param('id') id: string) {
-    return await this.orderService.updateStatusOrder(id);
+  async updateStatusOrderController(
+    @Param('id') id: string,
+    @Body('expoPushToken') expoPushToken: string,
+  ) {
+    return await this.orderService.updateStatusOrder(id, expoPushToken);
   }
 
   @Get('fetch-total-revenue/:id')

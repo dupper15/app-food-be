@@ -1,4 +1,5 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';import { ObjectId, Types } from 'mongoose';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { ObjectId, Types } from 'mongoose';
 import { Document } from 'mongoose';
 
 export type NotificationDocument = Notification & Document;
@@ -7,6 +8,9 @@ export type NotificationDocument = Notification & Document;
 export class Notification {
   @Prop({ type: Types.ObjectId, required: true, ref: 'User' })
   user_id: ObjectId;
+
+  @Prop({ required: true })
+  title: string;
 
   @Prop({ required: true })
   content: string;

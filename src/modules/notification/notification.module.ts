@@ -1,7 +1,9 @@
-import { Module } from '@nestjs/common';import { MongooseModule } from '@nestjs/mongoose';
+import { Module } from '@nestjs/common';
+import { MongooseModule } from '@nestjs/mongoose';
 import { Notification, NotificationSchema } from './notification.schema';
 import { NotificationService } from './notification.service';
 import { NotificationController } from './notification.controller';
+import { firebaseAdminProvider } from './firebase.provider';
 
 @Module({
   imports: [
@@ -10,7 +12,7 @@ import { NotificationController } from './notification.controller';
     ]),
   ],
   controllers: [NotificationController],
-  providers: [NotificationService],
-  exports: [NotificationService],
+  providers: [firebaseAdminProvider, NotificationService],
+  exports: [MongooseModule, NotificationService],
 })
 export class NotificationModule {}
