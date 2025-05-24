@@ -13,8 +13,6 @@ import { RestaurantService } from './restaurant.service';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { UploadService } from '../upload/upload.service';
 import { EditRestaurantDto } from './dto/edit-restaurant.dto';
-import { max } from 'class-validator';
-
 @Controller('restaurants')
 export class RestaurantController {
   constructor(

@@ -1,5 +1,4 @@
-import {
-  Body,
+import {  Body,
   Controller,
   Delete,
   Get,
@@ -64,17 +63,27 @@ export class CustomersController extends UserController<Customer> {
   ) {
     return this.customerService.addAddress(userId, body.address);
   }
+  @Get(':id/address')
+  async getAddresses(@Param('id') userId: string) {
+    return this.customerService.getAddressTrim(userId);
+  }
+  @Put(':id/address')
+  async editAddress(
+    @Param('id') userId: string,
+    @Body() body: { address: string; prevAddress: string },
+  ) {
+    const { address, prevAddress } = body;
+    return this.customerService.editAddress(userId, address, prevAddress);
+  }
   @Delete(':id/address')
   async removeAddress(
     @Param('id') userId: string,
     @Body() body: { address: string },
   ) {
-    return this.customerService.removeAddress(userId, body.address);
+    const { address } = body;
+    return this.customerService.removeAddress(userId, address);
   }
-  @Get(':id/address')
-  async getAddresses(@Param('id') userId: string) {
-    return this.customerService.getAddresses(userId);
-  }
+
   @Get(':id/points')
   async getPoints(@Param('id') userId: string) {
     return this.customerService.getPoints(userId);
