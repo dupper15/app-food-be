@@ -129,6 +129,8 @@ export class OrderService {
     const order = await this.orderModel
       .findById(id)
       .populate<{ array_item: OrderItem[] }>('array_item')
+      .populate<{ customer_id: PopulatedCustomer }>('customer_id', 'name')
+      .populate<{ restaurant_id: PopulatedRestaurant }>('restaurant_id', 'name')
       .exec();
     if (!order) {
       throw new BadRequestException('No found order');
@@ -154,6 +156,13 @@ export class OrderService {
       sum_dishes: sumDishes,
     });
 
+    // Create notification for customer
+    const restaurantName = order.restaurant_id?.name || 'Restaurant';
+    await this.notificationService.createNotification({
+      user_id: order.customer_id._id, // Already an ObjectId
+      content: `Your order from ${restaurantName} has been canceled by the restaurant.`,
+    });
+
     return { msg: 'Cancelled order successfully' };
   }
 
@@ -162,7 +171,10 @@ export class OrderService {
   }
 
   async fetchDetailOrder(orderId: ObjectId): Promise<Order> {
-    const order = await this.orderModel.findById(orderId).exec();
+    const order = await this.orderModel
+      .findById(orderId)
+      .populate('restaurant_id')
+      .exec();
     if (!order) {
       throw new BadRequestException('No found order');
     }
@@ -329,6 +341,11 @@ export class OrderService {
     if (!order) {
       throw new BadRequestException('No found order');
     }
+
+    const prevStatus = order.status;
+    let notificationMessage = '';
+    const restaurantName = order.restaurant_id?.name || 'Restaurant';
+
     if (order.status === 'Pending') {
       order.status = 'Received';
       const customer = await this.customerModel
@@ -353,10 +370,14 @@ export class OrderService {
       }
     } else if (order.status === 'Received') {
       order.status = 'Preparing';
+      notificationMessage = `Your order from ${restaurantName} is now being prepared.`;
     } else if (order.status === 'Preparing') {
       order.status = 'Ready';
+      notificationMessage = `Your order from ${restaurantName} is now ready.`;
     } else if (order.status === 'Ready') {
       order.status = 'Completed';
+      notificationMessage = `Your order from ${restaurantName} has been completed. Thank you for your order!`;
+
       const sumDishes: number = Array.isArray(order.array_item)
         ? (order.array_item as { quantity?: number }[]).reduce(
             (sum, item) => sum + (Number(item?.quantity) || 0),
@@ -391,7 +412,17 @@ export class OrderService {
     } else {
       throw new BadRequestException('Invalid status update');
     }
+
     await order.save();
+
+    // Create notification if status changed
+    if (prevStatus !== order.status && notificationMessage) {
+      await this.notificationService.createNotification({
+        user_id: order.customer_id._id, // Already an ObjectId
+        content: notificationMessage,
+      });
+    }
+
     return order;
   }
 

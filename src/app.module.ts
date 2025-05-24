@@ -1,5 +1,5 @@
-import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
+import { Module } from '@nestjs/common';import { MongooseModule } from '@nestjs/mongoose';
+import { ConfigModule } from '@nestjs/config';
 import { RestaurantModule } from './modules/restaurant/restaurant.module';
 import { RestaurantOwnerModule } from './modules/restaurant-owner/restaurant-owner.module';
 import * as dotenv from 'dotenv';
@@ -25,9 +25,11 @@ import { SearchModule } from './modules/search/search.module';
 import { RedisModule } from './modules/redis/redis.module';
 import { SmsModule } from './modules/sms/sms.module';
 import { RecommendModule } from './modules/recommend-system/recommend.module';
+import { ChatGateway } from './gateways/chat.gateway';
 dotenv.config();
 @Module({
   imports: [
+    ConfigModule.forRoot(),
     MongooseModule.forRoot(
       process.env.MONGO_URI || 'mongodb://127.0.0.1/app-food',
     ),
@@ -57,6 +59,6 @@ dotenv.config();
     RecommendModule,
   ],
   controllers: [AppController],
-  providers: [],
+  providers: [ChatGateway],
 })
 export class AppModule {}

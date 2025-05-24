@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { Types, ObjectId } from 'mongoose';
 import { Notification, NotificationDocument } from './notification.schema';
 import { SendNotificationDTO } from './dto/send-notification.dto';
 import axios from 'axios';
@@ -12,6 +13,11 @@ export class NotificationService {
   ) {}
 
   async createNotification(data: Partial<Notification>): Promise<Notification> {
+    if (data.user_id && typeof data.user_id === 'string') {
+      data.user_id = new Types.ObjectId(
+        data.user_id,
+      ) as unknown as Notification['user_id'];
+    }
     return this.notificationModel.create(data);
   }
 
@@ -60,7 +66,15 @@ export class NotificationService {
     return updatedNotification;
   }
 
-  async fetchAllNotificationsByUser(user_id: string): Promise<Notification[]> {
-    return this.notificationModel.find({ user_id }).exec();
+  async fetchAllNotificationsByUser(
+    user_id: string | Types.ObjectId,
+  ): Promise<Notification[]> {
+    // Convert string to ObjectId if needed
+    const userId =
+      typeof user_id === 'string' ? new Types.ObjectId(user_id) : user_id;
+    return this.notificationModel
+      .find({ user_id: userId })
+      .sort({ createdAt: -1 })
+      .exec();
   }
 }

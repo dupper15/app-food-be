@@ -1,40 +1,62 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Types } from 'mongoose';
 import { User } from '../user/user.schema';
-import { Schema as MongooseSchema, Types } from 'mongoose';
 
-@Schema({ timestamps: true })
+@Schema()
 export class Customer extends User {
-  @Prop({ default: '' })
+  @Prop({ type: String })
   name: string;
 
-  @Prop({ default: '' })
+  @Prop({ type: String })
   avatar: string;
 
-  @Prop({ default: [], type: [String] })
-  address: Array<string>;
-
-  @Prop({ default: '' })
-  phone: string;
-
-  @Prop({ default: 0 })
-  total_orders: number;
-
-  @Prop({ default: 0 })
-  last_login: Date;
-
-  @Prop({ default: false })
-  isDeleted: boolean;
-
-  @Prop({ type: [MongooseSchema.Types.ObjectId], ref: 'History', default: [] })
-  history: Types.ObjectId[];
+  @Prop({ type: [String], default: [] })
+  address: string[];
 
   @Prop({
-    type: [{ type: MongooseSchema.Types.ObjectId, ref: 'Restaurant' }],
+    type: [
+      {
+        address: String,
+        latitude: Number,
+        longitude: Number,
+      },
+    ],
     default: [],
   })
+  addressCoordinates: Array<{
+    address: string;
+    latitude: number;
+    longitude: number;
+  }>;
+
+  @Prop({ type: String })
+  phone: string;
+
+  @Prop({ type: Number, default: 0 })
+  total_logins: number;
+
+  @Prop({ type: Number, default: 0 })
+  total_orders: number;
+
+  @Prop({ type: Number, default: 0 })
+  total_time_spent: number;
+
+  @Prop({ type: Date })
+  last_login: Date;
+
+  @Prop({ type: Boolean, default: false })
+  isDeleted: boolean;
+
+  @Prop({ type: [String], default: [] })
+  history: string[];
+
+  @Prop({ type: [String], default: [] })
+  cart: string[];
+
+  @Prop({ type: [Types.ObjectId], ref: 'Restaurant', default: [] })
   favorite_restaurants: Types.ObjectId[];
 
-  @Prop({ default: 0 })
+  @Prop({ type: Number, default: 0 })
   total_points: number;
 
   @Prop({ default: null })
