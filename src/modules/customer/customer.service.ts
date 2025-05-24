@@ -195,4 +195,44 @@ export class CustomerService extends UserService<Customer> {
     await customer.save();
     return customer;
   }
+  async getAddressTrim(userId: string) {
+    const customer = await this.customerModel.findById(userId);
+    if (!customer) {
+      throw new BadRequestException('User not found');
+    }
+    // Return only the first 3 characters of each address
+    return customer.address.map((address) => address);
+  }
+  async editAddress(userId, address, prevAddress) {
+    const customer = await this.customerModel.findById(userId);
+    if (!customer) {
+      throw new BadRequestException('User not found');
+    }
+    // Check if the previous address exists
+    const addressIndex = customer.address.indexOf(prevAddress);
+    if (addressIndex === -1) {
+      throw new BadRequestException('Previous address not found');
+    }
+    // Update the address
+    customer.address[addressIndex] = address;
+
+    // Update coordinates if available
+    if (customer.addressCoordinates && customer.addressCoordinates.length > 0) {
+      const coordIndex = customer.addressCoordinates.findIndex(
+        (item) => item.address === prevAddress,
+      );
+      if (coordIndex !== -1) {
+        const coordinates = await this.geocodingService.geocodeAddress(address);
+        if (coordinates) {
+          customer.addressCoordinates[coordIndex] = {
+            address,
+            latitude: coordinates.latitude,
+            longitude: coordinates.longitude,
+          };
+        }
+      }
+    }
+
+    return customer.save();
+  }
 }
