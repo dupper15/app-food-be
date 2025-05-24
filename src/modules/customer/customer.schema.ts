@@ -58,6 +58,9 @@ export class Customer extends User {
 
   @Prop({ type: Number, default: 0 })
   total_points: number;
+
+  @Prop({ default: null })
+  expo_push_token: string;
 }
 
 export const CustomerSchema = SchemaFactory.createForClass(Customer);

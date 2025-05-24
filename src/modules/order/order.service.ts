@@ -12,19 +12,7 @@ import { subMonths, startOfMonth, endOfMonth } from 'date-fns';
 import { Rating } from '../rating/rating.schema';
 import { Restaurant } from '../restaurant/restaurant.schema';
 import { NotificationService } from '../notification/notification.service';
-
-// Add these interfaces to properly type the populated objects
-interface PopulatedCustomer {
-  _id: ObjectId;
-  name: string;
-  avatar?: string;
-}
-
-interface PopulatedRestaurant {
-  _id: ObjectId;
-  name: string;
-  avatar?: string;
-}
+import { Notification } from '../notification/notification.schema';
 
 @Injectable()
 export class OrderService {
@@ -38,6 +26,8 @@ export class OrderService {
     @InjectModel(Rating.name) private readonly ratingModel: Model<Rating>,
     @InjectModel(Restaurant.name)
     private readonly restaurantModel: Model<Restaurant>,
+    @InjectModel(Notification.name)
+    private readonly notificationModel: Model<Notification>,
 
     private readonly historyService: HistoryService,
     private readonly notificationService: NotificationService,
@@ -346,12 +336,8 @@ export class OrderService {
       .exec();
   }
 
-  async updateStatusOrder(id: string): Promise<any> {
-    const order = await this.orderModel
-      .findById(id)
-      .populate<{ customer_id: PopulatedCustomer }>('customer_id', 'name')
-      .populate<{ restaurant_id: PopulatedRestaurant }>('restaurant_id', 'name')
-      .exec();
+  async updateStatusOrder(id: string, expoPushToken?: string): Promise<Order> {
+    const order = await this.orderModel.findById(id).exec();
     if (!order) {
       throw new BadRequestException('No found order');
     }
@@ -362,7 +348,26 @@ export class OrderService {
 
     if (order.status === 'Pending') {
       order.status = 'Received';
-      notificationMessage = `Your order from ${restaurantName} has been received and is being processed.`;
+      const customer = await this.customerModel
+        .findById(order.customer_id)
+        .exec();
+      if (customer && expoPushToken) {
+        await this.notificationService.sendPushNotification(expoPushToken, {
+          user_id: (customer as any)._id.toString(),
+          title: 'Đơn hàng của bạn đã được nhận!',
+          content: `Nhà hàng đã xác nhận đơn hàng #${order._id.toString()}.`,
+          data: {
+            orderId: order._id.toString(),
+          },
+        });
+
+        await this.notificationModel.create({
+          user_id: customer._id,
+          title: 'Đơn hàng đã được nhận',
+          content: `Nhà hàng đã xác nhận đơn hàng #${order._id.toString()}.`,
+          isSeen: false,
+        });
+      }
     } else if (order.status === 'Received') {
       order.status = 'Preparing';
       notificationMessage = `Your order from ${restaurantName} is now being prepared.`;
@@ -420,6 +425,7 @@ export class OrderService {
 
     return order;
   }
+
   async getOrderedDishesByCustomerId(userId: string) {
     const ratings = await this.ratingModel
       .find({ customer_id: userId })

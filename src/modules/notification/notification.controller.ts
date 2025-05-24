@@ -1,6 +1,7 @@
 import { Controller, Post, Get, Param, Body } from '@nestjs/common';
 import { NotificationService } from './notification.service';
 import { Notification } from './notification.schema';
+import { SendNotificationDTO } from './dto/send-notification.dto';
 
 @Controller('notification')
 export class NotificationController {
@@ -21,5 +22,13 @@ export class NotificationController {
   @Get('user/:id')
   async fetchAllByUser(@Param('id') id: string): Promise<Notification[]> {
     return this.notificationService.fetchAllNotificationsByUser(id);
+  }
+
+  @Post('send/:id')
+  async sendNotification(
+    @Param('id') userId: string,
+    @Body() body: SendNotificationDTO,
+  ) {
+    return this.notificationService.sendPushNotification(userId, body);
   }
 }
