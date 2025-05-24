@@ -3,7 +3,6 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { Notification, NotificationSchema } from './notification.schema';
 import { NotificationService } from './notification.service';
 import { NotificationController } from './notification.controller';
-import { firebaseAdminProvider } from './firebase.provider';
 
 @Module({
   imports: [
@@ -12,7 +11,7 @@ import { firebaseAdminProvider } from './firebase.provider';
     ]),
   ],
   controllers: [NotificationController],
-  providers: [firebaseAdminProvider, NotificationService],
+  providers: [NotificationService],
   exports: [MongooseModule, NotificationService],
 })
 export class NotificationModule {}

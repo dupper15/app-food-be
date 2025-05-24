@@ -14,6 +14,18 @@ import { Restaurant } from '../restaurant/restaurant.schema';
 import { NotificationService } from '../notification/notification.service';
 import { Notification } from '../notification/notification.schema';
 
+interface PopulatedCustomer {
+  _id: ObjectId;
+  name: string;
+  avatar?: string;
+}
+
+interface PopulatedRestaurant {
+  _id: ObjectId;
+  name: string;
+  avatar?: string;
+}
+
 @Injectable()
 export class OrderService {
   constructor(
@@ -342,10 +354,6 @@ export class OrderService {
       throw new BadRequestException('No found order');
     }
 
-    const prevStatus = order.status;
-    let notificationMessage = '';
-    const restaurantName = order.restaurant_id?.name || 'Restaurant';
-
     if (order.status === 'Pending') {
       order.status = 'Received';
       const customer = await this.customerModel
@@ -363,21 +371,17 @@ export class OrderService {
 
         await this.notificationModel.create({
           user_id: customer._id,
-          title: 'Đơn hàng đã được nhận',
+          title: 'Đơn hàng của bạn đã được nhận!',
           content: `Nhà hàng đã xác nhận đơn hàng #${order._id.toString()}.`,
           isSeen: false,
         });
       }
     } else if (order.status === 'Received') {
       order.status = 'Preparing';
-      notificationMessage = `Your order from ${restaurantName} is now being prepared.`;
     } else if (order.status === 'Preparing') {
       order.status = 'Ready';
-      notificationMessage = `Your order from ${restaurantName} is now ready.`;
     } else if (order.status === 'Ready') {
       order.status = 'Completed';
-      notificationMessage = `Your order from ${restaurantName} has been completed. Thank you for your order!`;
-
       const sumDishes: number = Array.isArray(order.array_item)
         ? (order.array_item as { quantity?: number }[]).reduce(
             (sum, item) => sum + (Number(item?.quantity) || 0),
@@ -414,14 +418,6 @@ export class OrderService {
     }
 
     await order.save();
-
-    // Create notification if status changed
-    if (prevStatus !== order.status && notificationMessage) {
-      await this.notificationService.createNotification({
-        user_id: order.customer_id._id, // Already an ObjectId
-        content: notificationMessage,
-      });
-    }
 
     return order;
   }
