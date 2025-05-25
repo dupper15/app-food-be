@@ -1,5 +1,4 @@
-import { InjectModel } from '@nestjs/mongoose';
-import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { Model } from 'mongoose';
 import { Restaurant } from 'src/modules/restaurant/restaurant.schema';
 import { CreateRestaurantDto } from './dto/create-restaurant.dto';
@@ -156,10 +155,13 @@ export class RestaurantService {
   async fetchForYouRestaurantByUserId(id: string): Promise<Restaurant[]> {
     const userDish = await this.orderService.getOrderedDishesByCustomerId(id);
     const allDishes = await this.dishService.fetchAllDishNameAndId();
-
-    const recommendedDishes = this.getRcmDish(userDish, allDishes, 20);
-    const restaurant = this.fetchRestaurantsByDishes(recommendedDishes);
-    return restaurant;
+    if (userDish.length > 0 || allDishes.length > 0) {
+      const recommendedDishes = this.getRcmDish(userDish, allDishes, 20);
+      const restaurant = this.fetchRestaurantsByDishes(recommendedDishes);
+      return restaurant;
+    } else {
+      return this.fetchMultipleDealsRestaurant();
+    }
   }
 
   async fetchNearRestaurantByUserId(id: string): Promise<Restaurant[]> {

@@ -160,8 +160,8 @@ export class UserService<T extends User> {
     await user.save();
 
     //send code
-    await this.mailService.sendVerificationCode(email, code);
-
+    //await this.mailService.sendVerificationCode(email, code);
+    console.log('code', code);
     return { message: 'Code sent successfully' };
   }
 

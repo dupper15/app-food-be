@@ -85,7 +85,7 @@ export class OrderService {
       await this.orderItemModel.findByIdAndUpdate(
         element._id,
         {
-          is_paid: true,
+          is_paid: true, 
         },
         { new: true },
       );
