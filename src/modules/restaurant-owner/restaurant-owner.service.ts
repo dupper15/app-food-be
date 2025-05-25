@@ -52,6 +52,7 @@ export class RestaurantOwnerService extends UserService<RestaurantOwner> {
       ...registerRestaurantOwnerDto,
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       password: hashedPassword,
+      status: 'Incomplete',
     });
     return newRestaurantOwner.save();
   }

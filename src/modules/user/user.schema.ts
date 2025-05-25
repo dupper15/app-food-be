@@ -1,5 +1,4 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Schema as MongooseSchema } from 'mongoose';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';import { Document, Schema as MongooseSchema } from 'mongoose';
 @Schema({ timestamps: true })
 export class User extends Document {
   @Prop({ required: true, unique: true })
@@ -17,7 +16,11 @@ export class User extends Document {
   @Prop({ default: false })
   isVerified: boolean;
 
-  @Prop({ required: true, default: 'Enable', enum: ['Enable', 'Disable'] })
+  @Prop({
+    required: true,
+    default: 'Enable',
+    enum: ['Enable', 'Disable', 'Pending', 'Incomplete'],
+  })
   status: string;
 
   @Prop({

@@ -1,4 +1,5 @@
-import { InjectModel } from '@nestjs/mongoose';import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { Model } from 'mongoose';
 import { Restaurant } from 'src/modules/restaurant/restaurant.schema';
 import { CreateRestaurantDto } from './dto/create-restaurant.dto';
@@ -32,7 +33,12 @@ export class RestaurantService {
   async create(createRestaurantDto: CreateRestaurantDto) {
     const { owner_id, name, description, address, banners } =
       createRestaurantDto;
-
+    const restaurantOwner = await this.restaurantOwnerModel.findById(owner_id);
+    if (!restaurantOwner) {
+      throw new NotFoundException('Restaurant owner not found');
+    }
+    restaurantOwner.status = 'Pending';
+    await restaurantOwner.save();
     const newRestaurant = new this.restaurantModel({
       owner_id,
       name,
@@ -117,7 +123,13 @@ export class RestaurantService {
   }
 
   async fetchAll(): Promise<Restaurant[]> {
-    return this.restaurantModel.find().exec();
+    return this.restaurantModel
+      .find()
+      .populate({
+        path: 'owner_id',
+        select: 'avatar',
+      })
+      .exec();
   }
 
   async fetchDetailRestaurant(id: string): Promise<Restaurant> {
@@ -155,7 +167,7 @@ export class RestaurantService {
   async fetchForYouRestaurantByUserId(id: string): Promise<Restaurant[]> {
     const userDish = await this.orderService.getOrderedDishesByCustomerId(id);
     const allDishes = await this.dishService.fetchAllDishNameAndId();
-    if (userDish.length > 0 || allDishes.length > 0) {
+    if (userDish.length > 0 && allDishes.length > 0) {
       const recommendedDishes = this.getRcmDish(userDish, allDishes, 20);
       const restaurant = this.fetchRestaurantsByDishes(recommendedDishes);
       return restaurant;
