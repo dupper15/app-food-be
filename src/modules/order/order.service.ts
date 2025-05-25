@@ -1,5 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
+import { BadRequestException, Injectable } from '@nestjs/common';import { InjectModel } from '@nestjs/mongoose';
 import { Order } from './order.schema';
 import { Model, ObjectId, Types } from 'mongoose';
 import { CreateOrderDto } from './dto/createOrder.dto';
@@ -166,13 +165,6 @@ export class OrderService {
       reason: 'Cancelled by restaurant',
       cost: order.total_price,
       sum_dishes: sumDishes,
-    });
-
-    // Create notification for customer
-    const restaurantName = order.restaurant_id?.name || 'Restaurant';
-    await this.notificationService.createNotification({
-      user_id: order.customer_id._id, // Already an ObjectId
-      content: `Your order from ${restaurantName} has been canceled by the restaurant.`,
     });
 
     return { msg: 'Cancelled order successfully' };
@@ -348,49 +340,56 @@ export class OrderService {
       .exec();
   }
 
-  async updateStatusOrder(id: string, expoPushToken?: string): Promise<Order> {
+  async updateStatusOrder(id: string): Promise<Order> {
     const order = await this.orderModel.findById(id).exec();
     if (!order) {
       throw new BadRequestException('No found order');
     }
 
-    if (order.status === 'Pending') {
-      order.status = 'Received';
-      const customer = await this.customerModel
-        .findById(order.customer_id)
-        .exec();
-      if (customer && expoPushToken) {
-        await this.notificationService.sendPushNotification(expoPushToken, {
-          user_id: (customer as any)._id.toString(),
-          title: 'Đơn hàng của bạn đã được nhận!',
-          content: `Nhà hàng đã xác nhận đơn hàng #${order._id.toString()}.`,
-          data: {
-            orderId: order._id.toString(),
-          },
-        });
+    const customer = await this.customerModel
+      .findById(order.customer_id)
+      .exec();
+    const orderId = order._id.toString();
 
-        await this.notificationModel.create({
-          user_id: customer._id,
-          title: 'Đơn hàng của bạn đã được nhận!',
-          content: `Nhà hàng đã xác nhận đơn hàng #${order._id.toString()}.`,
-          isSeen: false,
-        });
-      }
+    const notificationMap = {
+      Pending: {
+        nextStatus: 'Received',
+        title: 'Your order has been confirmed!',
+        content: `The restaurant has confirmed your order #${orderId}.`,
+      },
+      Preparing: {
+        nextStatus: 'Ready',
+        title: 'Your order is ready!',
+        content: `The restaurant has finished preparing your order #${orderId}. Please pick it up.`,
+      },
+    };
+
+    const notificationConfig =
+      notificationMap[order.status as keyof typeof notificationMap];
+
+    if (notificationConfig) {
+      const { nextStatus, title, content } = notificationConfig;
+      order.status = nextStatus;
+      if (customer)
+        await this.notificationService.sendPushNotification(
+          (customer as any)._id.toString(),
+          orderId,
+          title,
+          content,
+        );
     } else if (order.status === 'Received') {
       order.status = 'Preparing';
-    } else if (order.status === 'Preparing') {
-      order.status = 'Ready';
     } else if (order.status === 'Ready') {
       order.status = 'Completed';
+
       const sumDishes: number = Array.isArray(order.array_item)
         ? (order.array_item as { quantity?: number }[]).reduce(
             (sum, item) => sum + (Number(item?.quantity) || 0),
             0,
           )
         : 0;
-      // Tạo lịch sử đơn hàng sau khi hủy
       await this.historyService.createHistory({
-        order_id: order._id.toString(),
+        order_id: orderId,
         customer_id: order.customer_id.toString(),
         cost: order.total_price,
         sum_dishes: sumDishes,
@@ -405,12 +404,7 @@ export class OrderService {
       const additionalPoints = Math.floor(order.total_price / 100000);
       await this.customerModel.findByIdAndUpdate(
         order.customer_id,
-        {
-          $inc: {
-            total_orders: 1,
-            total_points: additionalPoints,
-          },
-        },
+        { $inc: { total_orders: 1, total_points: additionalPoints } },
         { new: true },
       );
     } else {

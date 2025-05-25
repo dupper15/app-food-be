@@ -1,4 +1,5 @@
-import {  BadRequestException,
+import {
+  BadRequestException,
   HttpException,
   Injectable,
   NotFoundException,
@@ -84,6 +85,9 @@ export class UserService<T extends User> {
       existingUser = existingCustomer;
       isVerified = existingCustomer.isVerified;
       userType = 'customer';
+      await this.customerModel.findByIdAndUpdate(existingCustomer._id, {
+        expo_push_token: loginUserDto.expo_push_token,
+      });
     }
     const existingAdmin = await this.adminModel.findOne({ email });
     if (existingAdmin) {
@@ -97,6 +101,12 @@ export class UserService<T extends User> {
       isVerified = existingRestaurantOwner.isVerified;
       existingUser = existingRestaurantOwner;
       userType = 'restaurantOwner';
+      await this.restaurantOwnerModel.findByIdAndUpdate(
+        existingRestaurantOwner._id,
+        {
+          expo_push_token: loginUserDto.expo_push_token,
+        },
+      );
     }
     if (!existingCustomer && !existingAdmin && !existingRestaurantOwner) {
       throw new BadRequestException('Email not exist! Please try again');

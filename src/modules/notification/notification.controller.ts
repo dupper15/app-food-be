@@ -7,13 +7,6 @@ import { SendNotificationDTO } from './dto/send-notification.dto';
 export class NotificationController {
   constructor(private readonly notificationService: NotificationService) {}
 
-  @Post('create')
-  async createNotification(
-    @Body() data: Partial<Notification>,
-  ): Promise<Notification> {
-    return this.notificationService.createNotification(data);
-  }
-
   @Post('change-status/:id')
   async changeStatus(@Param('id') id: string): Promise<Notification> {
     return this.notificationService.changeStatus(id);
@@ -28,7 +21,13 @@ export class NotificationController {
   async sendNotification(
     @Param('id') userId: string,
     @Body() body: SendNotificationDTO,
-  ) {
-    return this.notificationService.sendPushNotification(userId, body);
+  ): Promise<any> {
+    const { orderId, title, content } = body;
+    return this.notificationService.sendPushNotification(
+      userId,
+      orderId,
+      title,
+      content,
+    );
   }
 }

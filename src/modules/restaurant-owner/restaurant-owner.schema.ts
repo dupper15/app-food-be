@@ -11,6 +11,9 @@ export class RestaurantOwner extends User {
 
   @Prop({ default: false })
   isDeleted: boolean;
+
+  @Prop({ default: false })
+  expo_push_token: string;
 }
 
 export const RestaurantOwnerSchema =
