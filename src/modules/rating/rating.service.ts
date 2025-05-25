@@ -17,10 +17,10 @@ export class RatingService {
         `Order with ID ${createRatingDto.order_id} not found`,
       );
     }
-
+    const restaurantObjectId = new Types.ObjectId(order.restaurant_id);
     const ratingData = {
       ...createRatingDto,
-      restaurant_id: order.restaurant_id,
+      restaurant_id: restaurantObjectId,
     };
 
     return this.ratingModel.create(ratingData);
@@ -41,10 +41,23 @@ export class RatingService {
 
   async fetchAllRatingsByRestaurant(restaurant_id: string): Promise<Rating[]> {
     const restaurantObjectId = new Types.ObjectId(restaurant_id);
-
+    const rating = await this.ratingModel
+      .find({ restaurant_id: restaurantObjectId })
+      .populate('replies_array')
+      .exec();
+    console.log('rating', rating);
     return this.ratingModel
       .find({ restaurant_id: restaurantObjectId })
       .populate('replies_array')
+      .populate('customer_id', 'name avatar')
+      .populate({
+        path: 'restaurant_id',
+        select: 'name',
+        populate: {
+          path: 'owner_id',
+          select: 'avatar',
+        },
+      })
       .exec();
   }
 
