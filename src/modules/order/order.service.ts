@@ -1,5 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
+import { BadRequestException, Injectable } from '@nestjs/common';import { InjectModel } from '@nestjs/mongoose';
 import { Order } from './order.schema';
 import { Model, ObjectId, Types } from 'mongoose';
 import { CreateOrderDto } from './dto/createOrder.dto';
@@ -83,7 +82,7 @@ export class OrderService {
       await this.orderItemModel.findByIdAndUpdate(
         element._id,
         {
-          is_paid: true, 
+          is_paid: true,
         },
         { new: true },
       );
@@ -439,7 +438,7 @@ export class OrderService {
       .sort({ createdAt: -1 });
 
     if (!orders || orders.length === 0) {
-      throw new BadRequestException('No order found');
+      return [];
     }
 
     const dishes: {

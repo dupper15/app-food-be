@@ -1,5 +1,4 @@
-import {
-  BadRequestException,
+import {  BadRequestException,
   HttpException,
   Injectable,
   NotFoundException,
@@ -74,6 +73,7 @@ export class UserService<T extends User> {
     message: string;
     total_time_spent: number;
     isVerified: boolean;
+    status: string;
   }> {
     const { email, password } = loginUserDto;
     let isVerified = true;
@@ -127,6 +127,7 @@ export class UserService<T extends User> {
       accessToken: accessToken,
       refreshToken: refreshToken,
       userType: userType,
+      status: existingUser.status,
       message: 'Login successfully',
       total_time_spent: existingUser.total_time_spent,
       isVerified: isVerified,
