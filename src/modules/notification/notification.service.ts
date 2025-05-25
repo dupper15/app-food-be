@@ -23,9 +23,9 @@ export class NotificationService {
     orderId: string,
     title: string,
     content: string,
-  ) {
+  ): Promise<any> {
     let existingUser: Customer | RestaurantOwner | null = null;
-    const existingCustomer = await this.customerModel.findById({ userId });
+    const existingCustomer = await this.customerModel.findById(userId);
     if (existingCustomer) {
       existingUser = existingCustomer;
     } else {
@@ -64,8 +64,6 @@ export class NotificationService {
           },
         },
       );
-
-      console.log('Expo push response:', response.data);
 
       await this.notificationModel.create({
         user_id: existingUser?._id,

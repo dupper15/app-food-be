@@ -49,6 +49,14 @@ export class OrderService {
     const customer = await this.customerModel.findById(
       createOrderDto.customer_id,
     );
+    const restaurant = await this.restaurantModel.findById(
+      createOrderDto.restaurant_id,
+    );
+    if (!restaurant) {
+      throw new BadRequestException('Restaurant not found');
+    }
+    const ownerId = restaurant.owner_id.toString();
+
     if (!customer) {
       throw new BadRequestException('Customer not found');
     }
@@ -113,6 +121,14 @@ export class OrderService {
     if (updatedCart.order_items.length == 0) {
       await this.cartModel.findByIdAndDelete(cart._id);
     }
+
+    await this.notificationService.sendPushNotification(
+      ownerId,
+      newOrder._id.toString(),
+      'New Re-Order Received',
+      `A customer has placed a re-order #${newOrder._id.toString()}. Please process it promptly.`,
+    );
+    return newOrder.save();
     return await newOrder.save();
   }
 
@@ -121,8 +137,21 @@ export class OrderService {
     if (!order) {
       throw new BadRequestException('No found order');
     }
+    const restaurant = await this.restaurantModel.findById(order.restaurant_id);
+    if (!restaurant) {
+      throw new BadRequestException('Restaurant not found');
+    }
+    const ownerId = restaurant.owner_id.toString();
     order.status = 'Pending';
     const newOrder = new this.orderModel(order);
+    const newOrderId = newOrder._id.toString();
+
+    await this.notificationService.sendPushNotification(
+      ownerId,
+      newOrderId,
+      'New Re-Order Received',
+      `A customer has placed a re-order #${newOrderId}. Please process it promptly.`,
+    );
     return newOrder.save();
   }
 
@@ -131,8 +160,20 @@ export class OrderService {
     if (!order) {
       throw new BadRequestException('No found order');
     }
+    const restaurant = await this.restaurantModel.findById(order.restaurant_id);
+    if (!restaurant) {
+      throw new BadRequestException('Restaurant not found');
+    }
+    const ownerId = restaurant.owner_id.toString();
     order.status = 'Cancel';
     await order.save();
+
+    await this.notificationService.sendPushNotification(
+      ownerId,
+      orderId.toString(),
+      'Your order has been cancelled',
+      `The restaurant has cancelled your order #${orderId.toString()}. We apologize for the inconvenience.`,
+    );
     return { msg: 'Cancelled order successfully' };
   }
 
@@ -146,6 +187,8 @@ export class OrderService {
     if (!order) {
       throw new BadRequestException('No found order');
     }
+    const orderId = order._id.toString();
+    const customerId = order.customer_id._id.toString();
 
     order.status = 'Cancel';
     await order.save();
@@ -158,10 +201,17 @@ export class OrderService {
         )
       : 0;
 
+    await this.notificationService.sendPushNotification(
+      customerId,
+      orderId,
+      'Your order has been cancelled',
+      `The restaurant has cancelled your order #${orderId}. We apologize for the inconvenience.`,
+    );
+
     // Tạo lịch sử ơn hàng sau khi hủy
     await this.historyService.createHistory({
       order_id: order._id.toString(),
-      customer_id: order.customer_id.toString(),
+      customer_id: customerId,
       reason: 'Cancelled by restaurant',
       cost: order.total_price,
       sum_dishes: sumDishes,
