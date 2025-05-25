@@ -1,4 +1,5 @@
-import { BadRequestException, Injectable } from '@nestjs/common';import { InjectModel } from '@nestjs/mongoose';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
 import { Order } from './order.schema';
 import { Model, ObjectId, Types } from 'mongoose';
 import { CreateOrderDto } from './dto/createOrder.dto';
@@ -349,36 +350,27 @@ export class OrderService {
     const customer = await this.customerModel
       .findById(order.customer_id)
       .exec();
+    const customerId = (customer as any)?._id.toString();
     const orderId = order._id.toString();
 
-    const notificationMap = {
-      Pending: {
-        nextStatus: 'Received',
-        title: 'Your order has been confirmed!',
-        content: `The restaurant has confirmed your order #${orderId}.`,
-      },
-      Preparing: {
-        nextStatus: 'Ready',
-        title: 'Your order is ready!',
-        content: `The restaurant has finished preparing your order #${orderId}. Please pick it up.`,
-      },
-    };
-
-    const notificationConfig =
-      notificationMap[order.status as keyof typeof notificationMap];
-
-    if (notificationConfig) {
-      const { nextStatus, title, content } = notificationConfig;
-      order.status = nextStatus;
-      if (customer)
-        await this.notificationService.sendPushNotification(
-          (customer as any)._id.toString(),
-          orderId,
-          title,
-          content,
-        );
+    if (order.status === 'Pending') {
+      order.status = 'Received';
+      await this.notificationService.sendPushNotification(
+        customerId,
+        orderId,
+        'Your order has been confirmed!',
+        `The restaurant has confirmed your order #${orderId}.`,
+      );
     } else if (order.status === 'Received') {
       order.status = 'Preparing';
+    } else if (order.status === 'Preparing') {
+      order.status = 'Ready';
+      await this.notificationService.sendPushNotification(
+        customerId,
+        orderId,
+        'Your order is ready!',
+        `The restaurant has finished preparing your order #${orderId}. Please pick it up.`,
+      );
     } else if (order.status === 'Ready') {
       order.status = 'Completed';
 
