@@ -1,40 +1,58 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Types, ObjectId } from 'mongoose';
+import { Types } from 'mongoose';
 import { Notification, NotificationDocument } from './notification.schema';
-import { SendNotificationDTO } from './dto/send-notification.dto';
 import axios from 'axios';
+import { Customer } from '../customer/customer.schema';
+import { RestaurantOwner } from '../restaurant-owner/restaurant-owner.schema';
 
 @Injectable()
 export class NotificationService {
   constructor(
     @InjectModel(Notification.name)
     private notificationModel: Model<NotificationDocument>,
+    @InjectModel(Customer.name)
+    private customerModel: Model<Customer>,
+    @InjectModel(RestaurantOwner.name)
+    private restaurantOwnerModel: Model<RestaurantOwner>,
   ) {}
 
-  async createNotification(data: Partial<Notification>): Promise<Notification> {
-    if (data.user_id && typeof data.user_id === 'string') {
-      data.user_id = new Types.ObjectId(
-        data.user_id,
-      ) as unknown as Notification['user_id'];
+  async sendPushNotification(
+    userId: string,
+    orderId: string,
+    title: string,
+    content: string,
+  ) {
+    let existingUser: Customer | RestaurantOwner | null = null;
+    const existingCustomer = await this.customerModel.findById({ userId });
+    if (existingCustomer) {
+      existingUser = existingCustomer;
+    } else {
+      const existingRestaurantOwner = await this.restaurantOwnerModel.findById({
+        userId,
+      });
+      existingUser = existingRestaurantOwner;
     }
-    return this.notificationModel.create(data);
-  }
+    const expoPushToken = existingUser?.expo_push_token;
 
-  async sendPushNotification(expoPushToken: string, body: SendNotificationDTO) {
+    if (!expoPushToken || !expoPushToken.startsWith('ExponentPushToken')) {
+      console.warn(
+        'Invalid or missing Expo push token for customer:',
+        existingUser?._id,
+      );
+      return;
+    }
+
+    const message = {
+      to: expoPushToken,
+      sound: 'default',
+      title,
+      body: content,
+      data: { orderId },
+    };
+
     try {
-      if (!expoPushToken.startsWith('ExponentPushToken')) {
-        throw new Error('Invalid Expo push token');
-      }
-
-      const message = {
-        to: expoPushToken,
-        sound: 'default',
-        title: body.title,
-        body: body.content,
-      };
-
       const response = await axios.post(
         'https://exp.host/--/api/v2/push/send',
         message,
@@ -48,9 +66,17 @@ export class NotificationService {
       );
 
       console.log('Expo push response:', response.data);
+
+      await this.notificationModel.create({
+        user_id: existingUser?._id,
+        title,
+        content,
+        isSeen: false,
+      });
+
       return response.data;
     } catch (error) {
-      console.error('Error sending push notification via Expo:', error);
+      console.error('Error sending push notification:', error);
       throw error;
     }
   }

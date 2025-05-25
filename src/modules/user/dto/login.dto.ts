@@ -1,5 +1,4 @@
 import { IsEmail, IsNotEmpty, MinLength } from 'class-validator';
-
 export class LoginUserDto {
   @IsNotEmpty()
   @IsEmail()
@@ -8,4 +7,6 @@ export class LoginUserDto {
   @IsNotEmpty()
   @MinLength(6)
   password: string;
+
+  expo_push_token?: string;
 }
