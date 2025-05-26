@@ -1,26 +1,36 @@
-import { Injectable, NotFoundException } from '@nestjs/common';import { InjectModel } from '@nestjs/mongoose';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { Rating, RatingDocument } from './rating.schema';
+import { Rating } from './rating.schema';
 import { CreateRatingDto } from './dto/createRating';
+import { Order } from '../order/order.schema';
+import { Restaurant } from '../restaurant/restaurant.schema';
 
 @Injectable()
 export class RatingService {
   constructor(
-    @InjectModel(Rating.name) private ratingModel: Model<RatingDocument>,
-    @InjectModel('Order') private orderModel: Model<any>, // Inject Order model
+    @InjectModel(Rating.name) private ratingModel: Model<Rating>,
+    @InjectModel(Order.name) private orderModel: Model<Order>,
+    @InjectModel(Restaurant.name) private restaurantModel: Model<Restaurant>,
   ) {}
 
   async createRating(createRatingDto: CreateRatingDto): Promise<Rating> {
-    const order = await this.orderModel.findById(createRatingDto.order_id);
+    const order = await this.orderModel
+      .findById(createRatingDto.order_id)
+      .exec();
     if (!order) {
       throw new NotFoundException(
-        `Order with ID ${createRatingDto.order_id} not found`,
+        `Order with ID ${createRatingDto.order_id.toString()} not found`,
       );
     }
-    const restaurantObjectId = new Types.ObjectId(order.restaurant_id);
+    const restaurant = await this.restaurantModel
+      .findById(order.restaurant_id)
+      .exec();
+    const restaurantId = restaurant?._id;
+    console.log('restaurantId', restaurantId);
     const ratingData = {
       ...createRatingDto,
-      restaurant_id: restaurantObjectId,
+      restaurant_id: restaurantId,
     };
 
     return this.ratingModel.create(ratingData);
@@ -83,11 +93,11 @@ export class RatingService {
   }
 
   async fetchAverage(restaurantId: string): Promise<number> {
-    const ratings = await this.ratingModel
-      .find({ restaurant_id: restaurantId })
-      .exec();
+    const restaurantObjectId = new Types.ObjectId(restaurantId);
+    const ratings = await this.ratingModel.find({
+      restaurant_id: restaurantObjectId,
+    });
     if (!ratings) throw new NotFoundException('Rating not found');
-
     const totalRating: number = ratings.reduce(
       (acc: number, rating) => acc + (rating.rating ?? 0),
       0,

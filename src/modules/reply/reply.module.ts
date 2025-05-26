@@ -3,10 +3,12 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { Reply, ReplySchema } from './reply.schema';
 import { ReplyController } from './reply.controller';
 import { ReplyService } from './reply.service';
+import { RatingModule } from '../rating/rating.module';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Reply.name, schema: ReplySchema }]),
+    RatingModule,
   ],
   exports: [MongooseModule, ReplyService],
   controllers: [ReplyController],
