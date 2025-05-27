@@ -30,6 +30,11 @@ export class UserController<T extends User> {
     return await this.userService.login(loginUserDto);
   }
 
+  @Post('google_login')
+   async googleLogin(@Body() idToken: string) {
+    return await this.userService.googleLogin(idToken);
+  }
+
   @Post('send-code')
   async sendCode(@Query('email') email: string) {
     return await this.userService.sendCode(email);

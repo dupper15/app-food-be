@@ -1,4 +1,5 @@
-import {  BadRequestException,
+import {
+  BadRequestException,
   HttpException,
   Injectable,
   NotFoundException,
@@ -14,6 +15,7 @@ import { MailService } from 'src/mailer/mail.service';
 import { RestaurantOwner } from '../restaurant-owner/restaurant-owner.schema';
 import { Customer } from '../customer/customer.schema';
 import { Admin } from '../admin/admin.schema';
+import { OAuth2Client } from 'google-auth-library';
 
 @Injectable()
 export class UserService<T extends User> {
@@ -66,6 +68,52 @@ export class UserService<T extends User> {
     return newUser.save();
   }
 
+  async googleLogin(idToken: string): Promise<any> {
+    const client: any = new OAuth2Client(process.env.GOOGLE_CLIENT_ID || 'no');
+
+    const ticket: any = await client.verifyIdToken({
+      idToken,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
+    let customer = this.customerModel.findOne({ email: payload.email });
+    if (customer) {
+      const accessToken = this.jwtService.generateAccessToken(payload);
+      const refreshToken = this.jwtService.generateRefreshToken(payload);
+
+      return {
+        accessToken: accessToken,
+        refreshToken: refreshToken,
+        userType: 'customer',
+        status: customer.status,
+        message: 'Login successfully',
+        total_time_spent: customer.total_time_spent,
+        isVerified: customer.isVerified,
+      };
+    }
+    else{
+      const password =  'googleLogin';
+   return this.customerModel.create({
+    email: payload.email,
+    name: payload.name || '',
+    avatar: payload.picture || '',
+    password,
+    isVerified: true,
+    total_logins: 1,
+    total_orders: 0,
+    total_time_spent: 0,
+    last_login: new Date(),
+    isDeleted: false,
+    address: [],
+    addressCoordinates: [],
+    phone: '',
+    history: [],
+    cart: [],
+    favorite_restaurants: [],
+    total_points: 0,
+  });
+    }
+  }
   async login(loginUserDto: LoginUserDto): Promise<{
     accessToken: string;
     refreshToken: string;
