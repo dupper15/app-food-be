@@ -115,8 +115,9 @@ export class CustomersController extends UserController<Customer> {
 
     const updatedData: any = {
       ...data.editUser,
-      ...(avatarUrl && { avatar: avatarUrl }),
+      avatar: avatarUrl,
     };
+
 
     return this.customerService.editCustomerInfo(userId, updatedData);
   }
