@@ -17,6 +17,9 @@ export class CreateRatingDto {
   @IsMongoId()
   customer_id: Types.ObjectId;
 
+  @IsMongoId()
+  restaurant_id: Types.ObjectId;
+
   @IsOptional()
   @IsArray()
   @IsString({ each: true })

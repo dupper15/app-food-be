@@ -64,34 +64,40 @@ export class HistoryService {
   async fetchAllHistorySuccessByRestaurant(id: string): Promise<History[]> {
     const histories = await this.historyModel
       .find()
-      .populate({ path: 'order_id', select: 'status restaurant_id' })
+      .populate({
+        path: 'order_id',
+        match: {
+          restaurant_id: id,
+          status: 'Completed',
+        },
+        select: 'status restaurant_id',
+      })
       .populate({ path: 'customer_id', select: 'name avatar' })
+      .lean()
       .exec();
 
-    if (!histories) throw new Error('History not found');
+    console.log('histories', histories);
 
-    return histories.filter(
-      (history) =>
-        history.order_id &&
-        String((history.order_id as any).restaurant_id) === String(id) &&
-        (history.order_id as any).status === 'Completed',
-    );
+    return histories.filter((h) => h.order_id);
   }
 
   async fetchAllHistoryFailedByRestaurant(id: string): Promise<History[]> {
     const histories = await this.historyModel
       .find()
-      .populate({ path: 'order_id', select: 'status restaurant_id' })
+      .populate({
+        path: 'order_id',
+        match: {
+          restaurant_id: id,
+          status: 'Cancel',
+        },
+        select: 'status restaurant_id',
+      })
       .populate({ path: 'customer_id', select: 'name avatar' })
+      .lean()
       .exec();
 
-    if (!histories) throw new Error('History not found');
+    console.log('histories', histories);
 
-    return histories.filter(
-      (history) =>
-        history.order_id &&
-        String((history.order_id as any).restaurant_id) === String(id) &&
-        (history.order_id as any).status === 'Cancel',
-    );
+    return histories.filter((h) => h.order_id);
   }
 }

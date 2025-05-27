@@ -11,8 +11,8 @@ import { subMonths, startOfMonth, endOfMonth } from 'date-fns';
 import { Rating } from '../rating/rating.schema';
 import { Restaurant } from '../restaurant/restaurant.schema';
 import { NotificationService } from '../notification/notification.service';
+import { Notification } from '../notification/notification.schema';
 
-// Add these interfaces to properly type the populated objects
 interface PopulatedCustomer {
   _id: ObjectId;
   name: string;
@@ -37,6 +37,8 @@ export class OrderService {
     @InjectModel(Rating.name) private readonly ratingModel: Model<Rating>,
     @InjectModel(Restaurant.name)
     private readonly restaurantModel: Model<Restaurant>,
+    @InjectModel(Notification.name)
+    private readonly notificationModel: Model<Notification>,
 
     private readonly historyService: HistoryService,
     private readonly notificationService: NotificationService,
@@ -47,6 +49,14 @@ export class OrderService {
     const customer = await this.customerModel.findById(
       createOrderDto.customer_id,
     );
+    const restaurant = await this.restaurantModel.findById(
+      createOrderDto.restaurant_id,
+    );
+    if (!restaurant) {
+      throw new BadRequestException('Restaurant not found');
+    }
+    const ownerId = restaurant.owner_id.toString();
+
     if (!customer) {
       throw new BadRequestException('Customer not found');
     }
@@ -111,6 +121,14 @@ export class OrderService {
     if (updatedCart.order_items.length == 0) {
       await this.cartModel.findByIdAndDelete(cart._id);
     }
+
+    await this.notificationService.sendPushNotification(
+      ownerId,
+      newOrder._id.toString(),
+      'New Re-Order Received',
+      `A customer has placed a re-order #${newOrder._id.toString()}. Please process it promptly.`,
+    );
+    return newOrder.save();
     return await newOrder.save();
   }
 
@@ -119,8 +137,21 @@ export class OrderService {
     if (!order) {
       throw new BadRequestException('No found order');
     }
+    const restaurant = await this.restaurantModel.findById(order.restaurant_id);
+    if (!restaurant) {
+      throw new BadRequestException('Restaurant not found');
+    }
+    const ownerId = restaurant.owner_id.toString();
     order.status = 'Pending';
     const newOrder = new this.orderModel(order);
+    const newOrderId = newOrder._id.toString();
+
+    await this.notificationService.sendPushNotification(
+      ownerId,
+      newOrderId,
+      'New Re-Order Received',
+      `A customer has placed a re-order #${newOrderId}. Please process it promptly.`,
+    );
     return newOrder.save();
   }
 
@@ -129,8 +160,20 @@ export class OrderService {
     if (!order) {
       throw new BadRequestException('No found order');
     }
+    const restaurant = await this.restaurantModel.findById(order.restaurant_id);
+    if (!restaurant) {
+      throw new BadRequestException('Restaurant not found');
+    }
+    const ownerId = restaurant.owner_id.toString();
     order.status = 'Cancel';
     await order.save();
+
+    await this.notificationService.sendPushNotification(
+      ownerId,
+      orderId.toString(),
+      'Your order has been cancelled',
+      `The restaurant has cancelled your order #${orderId.toString()}. We apologize for the inconvenience.`,
+    );
     return { msg: 'Cancelled order successfully' };
   }
 
@@ -144,6 +187,8 @@ export class OrderService {
     if (!order) {
       throw new BadRequestException('No found order');
     }
+    const orderId = order._id.toString();
+    const customerId = order.customer_id._id.toString();
 
     order.status = 'Cancel';
     await order.save();
@@ -156,20 +201,20 @@ export class OrderService {
         )
       : 0;
 
+    await this.notificationService.sendPushNotification(
+      customerId,
+      orderId,
+      'Your order has been cancelled',
+      `The restaurant has cancelled your order #${orderId}. We apologize for the inconvenience.`,
+    );
+
     // Tạo lịch sử ơn hàng sau khi hủy
     await this.historyService.createHistory({
       order_id: order._id.toString(),
-      customer_id: order.customer_id.toString(),
+      customer_id: customerId,
       reason: 'Cancelled by restaurant',
       cost: order.total_price,
       sum_dishes: sumDishes,
-    });
-
-    // Create notification for customer
-    const restaurantName = order.restaurant_id?.name || 'Restaurant';
-    await this.notificationService.createNotification({
-      user_id: order.customer_id._id, // Already an ObjectId
-      content: `Your order from ${restaurantName} has been canceled by the restaurant.`,
     });
 
     return { msg: 'Cancelled order successfully' };
@@ -345,32 +390,38 @@ export class OrderService {
       .exec();
   }
 
-  async updateStatusOrder(id: string): Promise<any> {
-    const order = await this.orderModel
-      .findById(id)
-      .populate<{ customer_id: PopulatedCustomer }>('customer_id', 'name')
-      .populate<{ restaurant_id: PopulatedRestaurant }>('restaurant_id', 'name')
-      .exec();
+  async updateStatusOrder(id: string): Promise<Order> {
+    const order = await this.orderModel.findById(id).exec();
     if (!order) {
       throw new BadRequestException('No found order');
     }
 
-    const prevStatus = order.status;
-    let notificationMessage = '';
-    const restaurantName = order.restaurant_id?.name || 'Restaurant';
+    const customer = await this.customerModel
+      .findById(order.customer_id)
+      .exec();
+    const customerId = (customer as any)?._id.toString();
+    const orderId = order._id.toString();
 
     if (order.status === 'Pending') {
       order.status = 'Received';
-      notificationMessage = `Your order from ${restaurantName} has been received and is being processed.`;
+      await this.notificationService.sendPushNotification(
+        customerId,
+        orderId,
+        'Your order has been confirmed!',
+        `The restaurant has confirmed your order #${orderId}.`,
+      );
     } else if (order.status === 'Received') {
       order.status = 'Preparing';
-      notificationMessage = `Your order from ${restaurantName} is now being prepared.`;
     } else if (order.status === 'Preparing') {
       order.status = 'Ready';
-      notificationMessage = `Your order from ${restaurantName} is now ready.`;
+      await this.notificationService.sendPushNotification(
+        customerId,
+        orderId,
+        'Your order is ready!',
+        `The restaurant has finished preparing your order #${orderId}. Please pick it up.`,
+      );
     } else if (order.status === 'Ready') {
       order.status = 'Completed';
-      notificationMessage = `Your order from ${restaurantName} has been completed. Thank you for your order!`;
 
       const sumDishes: number = Array.isArray(order.array_item)
         ? (order.array_item as { quantity?: number }[]).reduce(
@@ -378,9 +429,8 @@ export class OrderService {
             0,
           )
         : 0;
-      // Tạo lịch sử đơn hàng sau khi hủy
       await this.historyService.createHistory({
-        order_id: order._id.toString(),
+        order_id: orderId,
         customer_id: order.customer_id.toString(),
         cost: order.total_price,
         sum_dishes: sumDishes,
@@ -395,12 +445,7 @@ export class OrderService {
       const additionalPoints = Math.floor(order.total_price / 100000);
       await this.customerModel.findByIdAndUpdate(
         order.customer_id,
-        {
-          $inc: {
-            total_orders: 1,
-            total_points: additionalPoints,
-          },
-        },
+        { $inc: { total_orders: 1, total_points: additionalPoints } },
         { new: true },
       );
     } else {
@@ -409,16 +454,9 @@ export class OrderService {
 
     await order.save();
 
-    // Create notification if status changed
-    if (prevStatus !== order.status && notificationMessage) {
-      await this.notificationService.createNotification({
-        user_id: order.customer_id._id, // Already an ObjectId
-        content: notificationMessage,
-      });
-    }
-
     return order;
   }
+
   async getOrderedDishesByCustomerId(userId: string) {
     const ratings = await this.ratingModel
       .find({ customer_id: userId })

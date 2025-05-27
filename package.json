@@ -1,5 +1,4 @@
-{
-  "name": "app-food-be",
+{  "name": "app-food-be",
   "version": "0.0.1",
   "description": "",
   "author": "",
@@ -27,9 +26,10 @@
     "@nestjs/jwt": "^11.0.0",
     "@nestjs/mongoose": "^11.0.1",
     "@nestjs/platform-express": "^11.0.1",
+    "@vonage/server-sdk": "^3.21.0",
+    "axios": "^1.9.0",
     "@nestjs/platform-socket.io": "^11.1.1",
     "@nestjs/websockets": "^11.1.1",
-    "@vonage/server-sdk": "^3.21.0",
     "bcrypt": "^5.1.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
