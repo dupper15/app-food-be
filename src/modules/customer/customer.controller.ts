@@ -113,8 +113,10 @@ export class CustomersController extends UserController<Customer> {
       avatarUrl = urls[0];
     }
 
+    const parsedEditUser = JSON.parse(data.editUser);
+
     const updatedData: any = {
-      ...data.editUser,
+      ...parsedEditUser,
       avatar: avatarUrl,
     };
 
