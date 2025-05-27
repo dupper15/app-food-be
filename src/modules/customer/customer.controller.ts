@@ -5,6 +5,8 @@ import {  Body,
   Param,
   Post,
   Put,
+  UploadedFiles,
+  UseInterceptors,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
@@ -12,10 +14,15 @@ import { CustomerService } from './customer.service';
 import { RegisterCustomerDto } from './dto/register-customer.dto';
 import { UserController } from '../user/user.controller';
 import { Customer } from './customer.schema';
+import { FilesInterceptor } from '@nestjs/platform-express';
+import { UploadService } from '../upload/upload.service';
 
 @Controller('customers')
 export class CustomersController extends UserController<Customer> {
-  constructor(private readonly customerService: CustomerService) {
+  constructor(
+    private readonly customerService: CustomerService,
+    private readonly uploadService: UploadService,
+  ) {
     super(customerService);
   }
 
@@ -93,7 +100,24 @@ export class CustomersController extends UserController<Customer> {
     return this.customerService.getCustomerInfo(userId);
   }
   @Put(':id')
-  async editCustomerInfo(@Param('id') userId: string, @Body() data: any) {
-    return this.customerService.editCustomerInfo(userId, data.editUser);
+  @UseInterceptors(FilesInterceptor('avatar'))
+  async editCustomerInfo(
+    @Param('id') userId: string,
+    @Body() data: any,
+    @UploadedFiles() avatar: Express.Multer.File[],
+  ) {
+    let avatarUrl;
+
+    if (avatar && avatar.length > 0) {
+      const urls = await this.uploadService.uploadMultipleImages(avatar);
+      avatarUrl = urls[0];
+    }
+
+    const updatedData: any = {
+      ...data.editUser,
+      ...(avatarUrl && { avatar: avatarUrl }),
+    };
+
+    return this.customerService.editCustomerInfo(userId, updatedData);
   }
 }

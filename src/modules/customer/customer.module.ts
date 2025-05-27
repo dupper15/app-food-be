@@ -1,4 +1,5 @@
-import { forwardRef, Module } from '@nestjs/common';import { MongooseModule } from '@nestjs/mongoose';
+import { forwardRef, Module } from '@nestjs/common';
+import { MongooseModule } from '@nestjs/mongoose';
 import { Customer, CustomerSchema } from './customer.schema';
 import { CustomerService } from './customer.service';
 import { CustomersController } from './customer.controller';
@@ -7,6 +8,7 @@ import { MailModule } from 'src/mailer/mail.module';
 import { AdminModule } from '../admin/admin.module';
 import { RestaurantOwnerModule } from '../restaurant-owner/restaurant-owner.module';
 import { GeocodingModule } from '../geocoding/geocoding.module';
+import { UploadModule } from '../upload/upload.module';
 
 @Module({
   imports: [
@@ -19,6 +21,7 @@ import { GeocodingModule } from '../geocoding/geocoding.module';
     JwtModule,
     MailModule,
     GeocodingModule,
+    UploadModule,
     forwardRef(() => RestaurantOwnerModule),
     forwardRef(() => AdminModule),
   ],
