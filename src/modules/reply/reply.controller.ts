@@ -4,7 +4,7 @@ import {
   Body,
   Param,
   UseInterceptors,
-  UploadedFile,
+  UploadedFiles,
 } from '@nestjs/common';
 import { ReplyService } from './reply.service';
 import { Reply } from './reply.schema';
@@ -24,7 +24,7 @@ export class ReplyController {
   async createReply(
     @Param('id') id: string,
     @Body() data: CreateReplyDto,
-    @UploadedFile() imagesUpload: Express.Multer.File[],
+    @UploadedFiles() imagesUpload: Express.Multer.File[],
   ): Promise<Reply> {
     let imageUrls: string[] = [];
     if (imagesUpload?.length) {
