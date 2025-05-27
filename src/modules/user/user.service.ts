@@ -1,5 +1,4 @@
-import {
-  BadRequestException,
+import {  BadRequestException,
   HttpException,
   Injectable,
   NotFoundException,
@@ -76,7 +75,9 @@ export class UserService<T extends User> {
       audience: process.env.GOOGLE_CLIENT_ID,
     });
     const payload = ticket.getPayload();
-    let customer = this.customerModel.findOne({ email: payload.email });
+    const customer = await this.customerModel
+      .findOne({ email: payload.email })
+      .exec();
     if (customer) {
       const accessToken = this.jwtService.generateAccessToken(payload);
       const refreshToken = this.jwtService.generateRefreshToken(payload);
@@ -90,28 +91,27 @@ export class UserService<T extends User> {
         total_time_spent: customer.total_time_spent,
         isVerified: customer.isVerified,
       };
-    }
-    else{
-      const password =  'googleLogin';
-   return this.customerModel.create({
-    email: payload.email,
-    name: payload.name || '',
-    avatar: payload.picture || '',
-    password,
-    isVerified: true,
-    total_logins: 1,
-    total_orders: 0,
-    total_time_spent: 0,
-    last_login: new Date(),
-    isDeleted: false,
-    address: [],
-    addressCoordinates: [],
-    phone: '',
-    history: [],
-    cart: [],
-    favorite_restaurants: [],
-    total_points: 0,
-  });
+    } else {
+      const password = 'googleLogin';
+      return this.customerModel.create({
+        email: payload.email,
+        name: payload.name || '',
+        avatar: payload.picture || '',
+        password,
+        isVerified: true,
+        total_logins: 1,
+        total_orders: 0,
+        total_time_spent: 0,
+        last_login: new Date(),
+        isDeleted: false,
+        address: [],
+        addressCoordinates: [],
+        phone: '',
+        history: [],
+        cart: [],
+        favorite_restaurants: [],
+        total_points: 0,
+      });
     }
   }
   async login(loginUserDto: LoginUserDto): Promise<{
