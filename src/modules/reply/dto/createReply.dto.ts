@@ -3,4 +3,6 @@ export class CreateReplyDto {
   @IsString()
   @IsNotEmpty()
   content: string;
+
+  images?: string[];
 }
