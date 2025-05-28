@@ -1,10 +1,12 @@
-import {  Controller,
+import {
+  Controller,
   Post,
   Get,
   Param,
   Body,
   UseInterceptors,
   UploadedFiles,
+  Query,
 } from '@nestjs/common';
 import { ReflectService } from './reflect.service';
 import { Reflect } from './reflect.schema';
@@ -60,5 +62,13 @@ export class ReflectController {
     @Body('message') message: string,
   ): Promise<Reflect> {
     return this.reflectService.reply(id, message);
+  }
+
+  @Get('by-admin')
+  async fetchAllReflectByAdmin(
+    @Query('page') page: 1,
+    @Query('limit') limit: 2,
+  ): Promise<{ data: Reflect[]; total: number }> {
+    return this.reflectService.fetchAllReflectByAdmin(page, limit);
   }
 }

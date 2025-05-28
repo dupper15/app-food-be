@@ -47,4 +47,24 @@ export class ReflectService {
 
     return updatedReflect;
   }
+
+  async fetchAllReflectByAdmin(
+    page: number,
+    limit: number,
+  ): Promise<{ data: Reflect[]; total: number }> {
+    const skip = (page - 1) * limit;
+
+    const [data, total] = await Promise.all([
+      this.reflectModel
+        .find()
+        .skip(skip)
+        .limit(limit)
+        .populate('replies_array')
+        .lean()
+        .exec(),
+      this.reflectModel.countDocuments().exec(),
+    ]);
+
+    return { data, total };
+  }
 }

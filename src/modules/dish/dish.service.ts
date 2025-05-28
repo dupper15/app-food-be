@@ -1,5 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
+import { BadRequestException, Injectable } from '@nestjs/common';import { InjectModel } from '@nestjs/mongoose';
 import { Dish } from './dish.schema';
 import { Model, ObjectId } from 'mongoose';
 import { CreateDishDto } from './dto/createDish.dto';
@@ -142,5 +141,10 @@ export class DishService {
       name: dish.name,
       restaurant_id: dish.restaurant_id.toString(),
     }));
+  }
+
+  async totalDishByRestaurant(id: string): Promise<number> {
+    const total = await this.dishModel.countDocuments({ restaurant_id: id });
+    return total;
   }
 }

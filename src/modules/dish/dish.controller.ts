@@ -85,4 +85,9 @@ export class DishController {
       category_id,
     );
   }
+
+  @Get('total-dish-by-restaurant/:id')
+  async totalDishByRestaurantController(@Param('id') id: string) {
+    return await this.dishService.totalDishByRestaurant(id);
+  }
 }

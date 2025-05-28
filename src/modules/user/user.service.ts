@@ -327,4 +327,58 @@ export class UserService<T extends User> {
     await account.save();
     return { message: `Update usage time successfully` };
   }
+
+  async fetchAllUser(
+    page: number,
+    limit: number,
+  ): Promise<{ data: (Admin | Customer | RestaurantOwner)[]; total: number }> {
+    const skip = (page - 1) * limit;
+    const [admins, customers, owners] = await Promise.all([
+      this.adminModel.find().lean().exec(),
+      this.customerModel.find().lean().exec(),
+      this.restaurantOwnerModel.find().lean().exec(),
+    ]);
+
+    const allUsers = [...admins, ...customers, ...owners];
+    const total = allUsers.length;
+
+    if (allUsers.length === 0) {
+      throw new NotFoundException('No users found');
+    }
+
+    const paginated = allUsers.slice(skip, skip + limit);
+
+    return {
+      data: paginated,
+      total,
+    };
+  }
+
+  async changeUserStatus(id: string): Promise<{ message: string }> {
+    const userRoles: (
+      | Model<Admin>
+      | Model<Customer>
+      | Model<RestaurantOwner>
+    )[] = [this.adminModel, this.customerModel, this.restaurantOwnerModel];
+
+    let account: any = null;
+
+    for (const model of userRoles) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      account = await (model as Model<User>).findById(id);
+      if (account) break;
+    }
+
+    if (!account) {
+      throw new BadRequestException('Account not found');
+    }
+    if (account.status === 'Enable') {
+      account.status = 'Disable';
+    } else {
+      account.status = 'Enable';
+    }
+    await account.save();
+
+    return { message: `User status changed to ${account.status} successfully` };
+  }
 }

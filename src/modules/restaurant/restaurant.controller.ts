@@ -8,6 +8,7 @@ import {
   Param,
   Put,
   Query,
+  Patch,
 } from '@nestjs/common';
 import { RestaurantService } from './restaurant.service';
 import { FilesInterceptor } from '@nestjs/platform-express';
@@ -95,6 +96,15 @@ export class RestaurantController {
   async fetchMultipleBuyerRestaurant() {
     return await this.restaurantService.fetchMultipleBuyerRestaurant();
   }
+
+  @Get('by-admin')
+  async fetchAllRestaurantByAdmin(
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
+  ) {
+    return await this.restaurantService.fetchAllRestaurantByAdmin(page, limit);
+  }
+
   @Get(':id')
   async fetchRestaurantById(@Param('id') id: string) {
     return await this.restaurantService.fetchDetailRestaurant(id);
@@ -121,5 +131,9 @@ export class RestaurantController {
   @Get('nearby/:id')
   async fetchNearRestaurantByUserId(@Param('id') id: string) {
     return await this.restaurantService.fetchNearRestaurantByUserId(id);
+  }
+  @Patch('change-status/:id')
+  async changeStatusRestaurant(@Param('id') id: string) {
+    return await this.restaurantService.changeStatusRestaurant(id);
   }
 }
