@@ -1,4 +1,5 @@
-import {  BadRequestException,
+import {
+  BadRequestException,
   HttpException,
   Injectable,
   NotFoundException,
@@ -339,7 +340,21 @@ export class UserService<T extends User> {
       this.restaurantOwnerModel.find().lean().exec(),
     ]);
 
-    const allUsers = [...admins, ...customers, ...owners];
+    const adminsWithRole = admins.map((admin) => ({ ...admin, role: 'Admin' }));
+    const customersWithRole = customers.map((cus) => ({
+      ...cus,
+      role: 'Customer',
+    }));
+    const ownersWithRole = owners.map((owner) => ({
+      ...owner,
+      role: 'Restaurant owner',
+    }));
+
+    const allUsers = [
+      ...adminsWithRole,
+      ...customersWithRole,
+      ...ownersWithRole,
+    ];
     const total = allUsers.length;
 
     if (allUsers.length === 0) {
