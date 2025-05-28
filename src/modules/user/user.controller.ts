@@ -1,8 +1,10 @@
-import {  Body,
+import {
+  Body,
   Controller,
   Delete,
   Get,
   Param,
+  Patch,
   Post,
   Put,
   Query,
@@ -17,6 +19,14 @@ import { User } from './user.schema';
 @Controller('users')
 export class UserController<T extends User> {
   constructor(private readonly userService: UserService<T>) {}
+
+  @Get('all')
+  async fetchAllUsers(
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
+  ) {
+    return await this.userService.fetchAllUser(page, limit);
+  }
 
   @Post('register')
   @UsePipes(new ValidationPipe())
@@ -57,5 +67,9 @@ export class UserController<T extends User> {
   @Put('/:id/usage-time')
   async updateUsageTime(@Param('id') id: string, @Body() data: any) {
     return await this.userService.updateUsageTime(id, data);
+  }
+  @Patch('change-status/:id')
+  async changeStatus(@Param('id') id: string) {
+    return await this.userService.changeUserStatus(id);
   }
 }

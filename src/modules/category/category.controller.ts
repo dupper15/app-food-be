@@ -27,6 +27,11 @@ export class CategoryController {
     return await this.categoryService.fetchAllCategory();
   }
 
+  @Get('fetchall-category-by-admin')
+  async fetchAllCategoryByAdminController() {
+    return await this.categoryService.fetchAllCategoryByAdmin();
+  }
+
   @Get('fetchall-category-by-restaurant/:id')
   async fetchAllCategoryByRestaurantController(@Param('id') id: ObjectId) {
     return await this.categoryService.fetchAllCategoryByRestaurant(id);
