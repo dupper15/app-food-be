@@ -101,8 +101,18 @@ export class RestaurantController {
   async fetchAllRestaurantByAdmin(
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 10,
+    @Query('q') q: string,
   ) {
-    return await this.restaurantService.fetchAllRestaurantByAdmin(page, limit);
+    return await this.restaurantService.fetchAllRestaurantByAdmin(
+      page,
+      limit,
+      q,
+    );
+  }
+
+  @Get('pending')
+  async fetchAllRestaurantPending() {
+    return await this.restaurantService.fetchAllRestaurantPending();
   }
 
   @Get(':id')
@@ -135,5 +145,13 @@ export class RestaurantController {
   @Patch('change-status/:id')
   async changeStatusRestaurant(@Param('id') id: string) {
     return await this.restaurantService.changeStatusRestaurant(id);
+  }
+  @Patch('rejected/:id')
+  async rejectedRestaurant(@Param('id') id: string) {
+    return await this.restaurantService.rejectedRestaurant(id);
+  }
+  @Patch('approved/:id')
+  async approvedRestaurant(@Param('id') id: string) {
+    return await this.restaurantService.approvedRestaurant(id);
   }
 }

@@ -14,7 +14,6 @@ import { Voucher } from '../voucher/voucher.schema';
 import { GeocodingService } from '../geocoding/geocoding.service';
 import { RatingService } from '../rating/rating.service';
 import { Dish } from '../dish/dish.schema';
-import e from 'express';
 
 @Injectable()
 export class RestaurantService {
@@ -485,18 +484,22 @@ export class RestaurantService {
   async fetchAllRestaurantByAdmin(
     page: number,
     limit: number,
+    q: string,
   ): Promise<{ data: any[]; total: number }> {
     const skip = (page - 1) * limit;
+
+    const searchCondition = q ? { name: { $regex: q, $options: 'i' } } : {};
     // Lấy danh sách nhà hàng và tổng số lượng
     const [restaurants, total] = await Promise.all([
       this.restaurantModel
-        .find({ status: { $in: ['Enable', 'Disable'] } })
+        .find({ status: { $in: ['Enable', 'Disable'] }, ...searchCondition })
         .skip(skip)
         .limit(limit)
         .populate({ path: 'owner_id', select: 'avatar' })
         .lean(), // Dùng lean để dễ thao tác dữ liệu
       this.restaurantModel.countDocuments({
         status: { $in: ['Enable', 'Disable'] },
+        ...searchCondition,
       }),
     ]);
 
@@ -545,14 +548,32 @@ export class RestaurantService {
     }
     if (restaurant.status === 'Enable') {
       restaurant.status = 'Disable';
-    } else if (restaurant.status === 'Disable') {
-      restaurant.status = 'Enable';
-    } else if (restaurant.status === 'Pending') {
-      restaurant.status = 'Enable';
     } else {
-      restaurant.status = 'Rejected';
+      restaurant.status = 'Enable';
     }
-
     return restaurant.save();
+  }
+
+  async rejectedRestaurant(id: string): Promise<Restaurant> {
+    const restaurant = await this.restaurantModel.findById(id);
+    if (!restaurant) {
+      throw new NotFoundException('Restaurant not found');
+    }
+    restaurant.status = 'Rejected';
+    return await restaurant.save();
+  }
+
+  async approvedRestaurant(id: string): Promise<Restaurant> {
+    const restaurant = await this.restaurantModel.findById(id);
+    if (!restaurant) {
+      throw new NotFoundException('Restaurant not found');
+    }
+    restaurant.status = 'Enable';
+    return await restaurant.save();
+  }
+
+  async fetchAllRestaurantPending(): Promise<Restaurant[]> {
+    const restaurants = await this.restaurantModel.find({ status: 'Pending' });
+    return restaurants;
   }
 }

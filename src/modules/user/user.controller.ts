@@ -15,6 +15,7 @@ import { UserService } from './user.service';
 import { RegisterUserDto } from './dto/register.dto';
 import { LoginUserDto } from './dto/login.dto';
 import { User } from './user.schema';
+import { CreateAdminDto } from './dto/createAdmin.dto';
 
 @Controller('users')
 export class UserController<T extends User> {
@@ -24,8 +25,10 @@ export class UserController<T extends User> {
   async fetchAllUsers(
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 10,
+    @Query('filter') filter: string = 'all',
+    @Query('q') q: string,
   ) {
-    return await this.userService.fetchAllUser(page, limit);
+    return await this.userService.fetchAllUser(page, limit, filter, q);
   }
 
   @Post('register')
@@ -41,7 +44,7 @@ export class UserController<T extends User> {
   }
 
   @Post('google_login')
-   async googleLogin(@Body() idToken: string) {
+  async googleLogin(@Body() idToken: string) {
     return await this.userService.googleLogin(idToken);
   }
 
@@ -76,5 +79,9 @@ export class UserController<T extends User> {
   @Patch('change-status/:id')
   async changeStatus(@Param('id') id: string) {
     return await this.userService.changeUserStatus(id);
+  }
+  @Post('admin')
+  async createAdmin(@Body() data: CreateAdminDto) {
+    return await this.userService.createAdmin(data);
   }
 }
