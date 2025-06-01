@@ -16,6 +16,7 @@ import { RestaurantOwner } from '../restaurant-owner/restaurant-owner.schema';
 import { Customer } from '../customer/customer.schema';
 import { Admin } from '../admin/admin.schema';
 import { OAuth2Client } from 'google-auth-library';
+import { CreateAdminDto } from './dto/createAdmin.dto';
 
 @Injectable()
 export class UserService<T extends User> {
@@ -332,28 +333,33 @@ export class UserService<T extends User> {
   async fetchAllUser(
     page: number,
     limit: number,
+    filter: string = 'all',
+    q?: string,
   ): Promise<{ data: (Admin | Customer | RestaurantOwner)[]; total: number }> {
     const skip = (page - 1) * limit;
-    const [admins, customers, owners] = await Promise.all([
-      this.adminModel.find().lean().exec(),
-      this.customerModel.find().lean().exec(),
-      this.restaurantOwnerModel.find().lean().exec(),
-    ]);
+    let admins: any[] = [];
+    let customers: any[] = [];
+    let owners: any[] = [];
 
-    const adminsWithRole = admins.map((admin) => ({ ...admin, role: 'Admin' }));
-    const customersWithRole = customers.map((cus) => ({
-      ...cus,
-      role: 'Customer',
-    }));
-    const ownersWithRole = owners.map((owner) => ({
-      ...owner,
-      role: 'Restaurant owner',
-    }));
+    const searchCondition = q ? { name: { $regex: q, $options: 'i' } } : {};
+
+    if (filter === 'all' || filter === 'admin') {
+      admins = await this.adminModel.find(searchCondition).lean().exec();
+    }
+    if (filter === 'all' || filter === 'customer') {
+      customers = await this.customerModel.find(searchCondition).lean().exec();
+    }
+    if (filter === 'all' || filter === 'owner') {
+      owners = await this.restaurantOwnerModel
+        .find(searchCondition)
+        .lean()
+        .exec();
+    }
 
     const allUsers = [
-      ...adminsWithRole,
-      ...customersWithRole,
-      ...ownersWithRole,
+      ...admins.map((a) => ({ ...a, role: 'Admin' })),
+      ...customers.map((c) => ({ ...c, role: 'Customer' })),
+      ...owners.map((o) => ({ ...o, role: 'Restaurant owner' })),
     ];
     const total = allUsers.length;
 
@@ -395,5 +401,16 @@ export class UserService<T extends User> {
     await account.save();
 
     return { message: `User status changed to ${account.status} successfully` };
+  }
+
+  async createAdmin(data: CreateAdminDto): Promise<Admin> {
+    const hashedPassword = await bcrypt.hash(data.password, 10);
+    const adminData: CreateAdminDto = {
+      ...data,
+      password: hashedPassword,
+    };
+
+    const newAdmin = await this.adminModel.create(adminData);
+    return newAdmin;
   }
 }
