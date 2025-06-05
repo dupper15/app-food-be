@@ -1,26 +1,25 @@
-import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
+import { Injectable } from '@nestjs/common';import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Customer } from '../customer/customer.schema';
 import { RestaurantOwner } from '../restaurant-owner/restaurant-owner.schema';
 import { Vonage } from '@vonage/server-sdk';
 import { Auth } from '@vonage/auth';
 import * as bcrypt from 'bcrypt';
+import { Twilio } from 'twilio';
+import axios from 'axios';
 
 @Injectable()
 export class SmsService {
-  private vonage: Vonage;
+  private client: Twilio;
 
   constructor(
     @InjectModel(Customer.name) private readonly customer: Model<Customer>,
     @InjectModel(RestaurantOwner.name)
-    private readonly restaurantOwner: Model<any>,
+    private readonly restaurantOwner: Model<RestaurantOwner>,
   ) {
-    this.vonage = new Vonage(
-      new Auth({
-        apiKey: process.env.VONAGE_API_KEY || 'no_key',
-        apiSecret: process.env.VONAGE_API_SECRET || 'no_secret',
-      }),
+    this.client = new Twilio(
+      process.env.TWILIO_ACCOUNT_SID,
+      process.env.TWILIO_AUTH_TOKEN,
     );
   }
   async verifyAccount(id: string, code: number) {
@@ -39,10 +38,10 @@ export class SmsService {
       customer.verified_code = null;
       await customer.save();
     } else if (restaurantOwner) {
-      if (restaurantOwner.verified_code.toString() !== code.toString) {
+      if (restaurantOwner.verified_code !== code) {
         throw new Error('Invalid verification code');
       }
-      restaurantOwner.is_verified = true;
+      restaurantOwner.isVerified = true;
       restaurantOwner.verified_code = null;
       await restaurantOwner.save();
     }
@@ -108,46 +107,51 @@ export class SmsService {
     }
   }
   async sendSms(to: string, id: string) {
-    const from = process.env.VONAGE_BRAND_NAME || 'NestApp';
-    const customer = await this.customer.findById(id);
-    const restaurantOwner = await this.restaurantOwner.findById(id);
     const code: number = Math.floor(1000 + Math.random() * 9000);
-    const codeStr: string = code.toString();
-    if (!customer && !restaurantOwner) {
+
+    // Tìm người dùng
+    const [customer, restaurantOwner] = await Promise.all([
+      this.customer.findById(id),
+      this.restaurantOwner.findById(id),
+    ]);
+
+    const user = customer || restaurantOwner;
+    if (!user) {
       throw new Error('User not found');
     }
 
-    if (customer) {
-      customer.verified_code = code;
-      customer.code_expired = new Date(Date.now() + 5 * 60 * 1000);
-      await customer.save();
-    } else if (restaurantOwner) {
-      restaurantOwner.verified_code = code;
-      restaurantOwner.code_expired = new Date(Date.now() + 5 * 60 * 1000);
-      await restaurantOwner.save();
-    }
+    // Cập nhật mã xác thực
+    user.verified_code = code;
+    user.code_expired = new Date(Date.now() + 5 * 60 * 1000);
+    await user.save();
+
+    // Cấu hình gửi SMS
+    const apiKey = 'BBF849BADBEEF56E718526CE14389B';
+    const secretKey = '3A90093CD7CF7006EB44ED2C40A0C2';
+    const smsType = 4;
+    const message = `Ma xac thuc cua ban la ${code}.`;
 
     try {
-      // const response = await this.vonage.sms.send({
-      //   to,
-      //   from,
-      //   text: `Your verification code is ${code}. It will expire in 5 minutes.`,
-      // });
+      const response = await axios.get(
+        'https://api.esms.vn/MainService.svc/json/SendMultipleMessage_V4_get',
+        {
+          params: {
+            Phone: to,
+            Content: message,
+            ApiKey: apiKey,
+            SecretKey: secretKey,
+            SmsType: smsType,
+            IsUnicode: 0,
+            Sandbox: 0,
+          },
+        },
+      );
 
-      // Kiểm tra trạng thái của tin nhắn
-      // if (response.messages[0].status !== '0') {
-      //   throw new Error(`Vonage error: ${response.messages[0]['error-text']}`);
-      // }
-
-      // return response;
-      console.log('Sending SMS...', code);
-      return {
-        message: `Your verification code is ${code}. It will expire in 5 minutes.`,
-        status: 'success',
-      };
-    } catch (error) {
-      console.error('Vonage SMS error:', error);
-      throw error;
+      // Trả về kết quả từ eSMS
+      return response.data;
+    } catch (err) {
+      console.error('Gửi SMS thất bại:', err?.response?.data || err.message);
+      throw new Error('Gửi SMS thất bại');
     }
   }
 
