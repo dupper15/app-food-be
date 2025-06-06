@@ -1,4 +1,5 @@
-import {  Body,
+import {
+  Body,
   Controller,
   Delete,
   Get,
@@ -112,10 +113,9 @@ export class CustomersController extends UserController<Customer> {
       const urls = await this.uploadService.uploadMultipleImages(avatar);
       avatarUrl = urls[0];
     }
-
     const updatedData: any = {
       ...data.editUser,
-      ...(avatarUrl && { avatar: avatarUrl }),
+      avatar: avatarUrl,
     };
 
     return this.customerService.editCustomerInfo(userId, updatedData);
