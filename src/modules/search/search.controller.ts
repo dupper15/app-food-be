@@ -1,4 +1,5 @@
 import {
+  Body,
   Controller,
   Get,
   Post,
@@ -25,5 +26,10 @@ export class SearchController {
   async getImageSearch(@UploadedFiles() image: Express.Multer.File[]) {
     const url = await this.uploadService.uploadMultipleImages(image);
     return this.searchService.getImageSearch(url[0]);
+  }
+  @Post('test_image')
+  getf(@Body() body: { query: string }) {
+    const { query } = body;
+    return this.searchService.getf(query);
   }
 }
