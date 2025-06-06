@@ -1,5 +1,4 @@
-import { InjectModel } from '@nestjs/mongoose';
-import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { Model } from 'mongoose';
 import { Restaurant } from 'src/modules/restaurant/restaurant.schema';
 import { CreateRestaurantDto } from './dto/create-restaurant.dto';
@@ -569,11 +568,20 @@ export class RestaurantService {
       throw new NotFoundException('Restaurant not found');
     }
     restaurant.status = 'Enable';
+
+    const owner = await this.restaurantOwnerModel.findById(restaurant.owner_id);
+    if (!owner) {
+      throw new NotFoundException('Owner not found');
+    }
+    owner.status = 'Enable';
     return await restaurant.save();
   }
 
   async fetchAllRestaurantPending(): Promise<Restaurant[]> {
-    const restaurants = await this.restaurantModel.find({ status: 'Pending' });
-    return restaurants;
+    const restaurants = await this.restaurantModel.find().populate({
+      path: 'owner_id',
+      match: { status: 'Pending' }, // chỉ populate nếu owner status là Pending
+    });
+    return restaurants.filter((r) => r.owner_id);
   }
 }

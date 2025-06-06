@@ -1,9 +1,8 @@
-import { Injectable } from '@nestjs/common';import { InjectModel } from '@nestjs/mongoose';
+import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Customer } from '../customer/customer.schema';
 import { RestaurantOwner } from '../restaurant-owner/restaurant-owner.schema';
-import { Vonage } from '@vonage/server-sdk';
-import { Auth } from '@vonage/auth';
 import * as bcrypt from 'bcrypt';
 import { Twilio } from 'twilio';
 import axios from 'axios';
@@ -126,7 +125,7 @@ export class SmsService {
     await user.save();
 
     // Cấu hình gửi SMS
-    const apiKey = 'BBF849BADBEEF56E718526CE14389B';
+    const apiKey = process.env.ESMS_API_KEY;
     const secretKey = '3A90093CD7CF7006EB44ED2C40A0C2';
     const smsType = 4;
     const message = `Ma xac thuc cua ban la ${code}.`;
