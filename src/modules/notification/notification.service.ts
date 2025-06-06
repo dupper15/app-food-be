@@ -29,9 +29,8 @@ export class NotificationService {
     if (existingCustomer) {
       existingUser = existingCustomer;
     } else {
-      const existingRestaurantOwner = await this.restaurantOwnerModel.findById({
-        userId,
-      });
+      const existingRestaurantOwner =
+        await this.restaurantOwnerModel.findById(userId);
       existingUser = existingRestaurantOwner;
     }
     const expoPushToken = existingUser?.expo_push_token;

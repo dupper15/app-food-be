@@ -42,6 +42,30 @@ export class CategoryService {
     return sorted;
   }
 
+  async fetchAllCategoryByAdmin() {
+    const categories = await this.categoryModel
+      .find({ isDeleted: false })
+      .lean();
+    const dishes = await this.dishModel.find().lean();
+
+    const categoryWithCount = categories.map((category) => {
+      const count = dishes.filter(
+        (dish) => dish.category_id?.toString() === category._id.toString(),
+      ).length;
+
+      return {
+        ...category,
+        dishCount: count,
+      };
+    });
+    const sorted = [
+      ...categoryWithCount.filter((c) => c.name !== 'Món khác'),
+      ...categoryWithCount.filter((c) => c.name === 'Món khác'),
+    ];
+
+    return sorted;
+  }
+
   async fetchAllCategoryByRestaurant(id: ObjectId): Promise<Category[]> {
     // check restaurant
     const checkRestaurant = await this.restaurantModel.findById(id);

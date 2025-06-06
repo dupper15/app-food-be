@@ -1,8 +1,10 @@
-import {  Body,
+import {
+  Body,
   Controller,
   Delete,
   Get,
   Param,
+  Patch,
   Post,
   Put,
   Query,
@@ -13,10 +15,21 @@ import { UserService } from './user.service';
 import { RegisterUserDto } from './dto/register.dto';
 import { LoginUserDto } from './dto/login.dto';
 import { User } from './user.schema';
+import { CreateAdminDto } from './dto/createAdmin.dto';
 
 @Controller('users')
 export class UserController<T extends User> {
   constructor(private readonly userService: UserService<T>) {}
+
+  @Get('all')
+  async fetchAllUsers(
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
+    @Query('filter') filter: string = 'all',
+    @Query('q') q: string,
+  ) {
+    return await this.userService.fetchAllUser(page, limit, filter, q);
+  }
 
   @Post('register')
   @UsePipes(new ValidationPipe())
@@ -31,7 +44,7 @@ export class UserController<T extends User> {
   }
 
   @Post('google_login')
-   async googleLogin(@Body() idToken: string) {
+  async googleLogin(@Body() idToken: string) {
     return await this.userService.googleLogin(idToken);
   }
 
@@ -62,5 +75,13 @@ export class UserController<T extends User> {
   @Put('/:id/usage-time')
   async updateUsageTime(@Param('id') id: string, @Body() data: any) {
     return await this.userService.updateUsageTime(id, data);
+  }
+  @Patch('change-status/:id')
+  async changeStatus(@Param('id') id: string) {
+    return await this.userService.changeUserStatus(id);
+  }
+  @Post('admin')
+  async createAdmin(@Body() data: CreateAdminDto) {
+    return await this.userService.createAdmin(data);
   }
 }

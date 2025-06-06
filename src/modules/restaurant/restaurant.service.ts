@@ -12,6 +12,8 @@ import { OrderService } from '../order/order.service';
 import { DishService } from '../dish/dish.service';
 import { Voucher } from '../voucher/voucher.schema';
 import { GeocodingService } from '../geocoding/geocoding.service';
+import { RatingService } from '../rating/rating.service';
+import { Dish } from '../dish/dish.schema';
 
 @Injectable()
 export class RestaurantService {
@@ -24,10 +26,13 @@ export class RestaurantService {
     private readonly restaurantOwnerModel: Model<RestaurantOwner>,
     @InjectModel(Voucher.name)
     private readonly voucherModel: Model<Voucher>,
+    @InjectModel(Dish.name)
+    private readonly dishModel: Model<Dish>,
     private readonly uploadService: UploadService,
     private readonly orderService: OrderService,
     private readonly dishService: DishService,
     private readonly geocodingService: GeocodingService,
+    private readonly ratingService: RatingService,
   ) {}
 
   async create(createRestaurantDto: CreateRestaurantDto) {
@@ -474,5 +479,111 @@ export class RestaurantService {
 
   private deg2rad(deg: number): number {
     return deg * (Math.PI / 180);
+  }
+
+  async fetchAllRestaurantByAdmin(
+    page: number,
+    limit: number,
+    q: string,
+  ): Promise<{ data: any[]; total: number }> {
+    const skip = (page - 1) * limit;
+
+    const searchCondition = q ? { name: { $regex: q, $options: 'i' } } : {};
+    // Lấy danh sách nhà hàng và tổng số lượng
+    const [restaurants, total] = await Promise.all([
+      this.restaurantModel
+        .find({ status: { $in: ['Enable', 'Disable'] }, ...searchCondition })
+        .skip(skip)
+        .limit(limit)
+        .populate({ path: 'owner_id', select: 'avatar' })
+        .lean(), // Dùng lean để dễ thao tác dữ liệu
+      this.restaurantModel.countDocuments({
+        status: { $in: ['Enable', 'Disable'] },
+        ...searchCondition,
+      }),
+    ]);
+
+    // Lấy trung bình đánh giá từng nhà hàng
+    const restaurantIds = restaurants.map((r) => r._id);
+    const averageRatings = await Promise.all(
+      restaurantIds.map(async (id) => {
+        const avg = await this.ratingService.fetchAverage(id.toString());
+        return { restaurantId: id, average: avg || 0 };
+      }),
+    );
+
+    const dishCounts = await Promise.all(
+      restaurantIds.map(async (id) => {
+        const count = await this.dishService.totalDishByRestaurant(
+          id.toString(),
+        );
+        return { restaurantId: id, count: count || 0 };
+      }),
+    );
+
+    const dishCountMap = new Map(
+      dishCounts.map((d) => [d.restaurantId.toString(), d.count]),
+    );
+    const averageRatingMap = new Map(
+      averageRatings.map((r) => [r.restaurantId.toString(), r.average]),
+    );
+
+    const data = restaurants.map((r) => {
+      const restaurantId = r._id.toString();
+      const result = {
+        ...r,
+        averageRating: averageRatingMap.get(restaurantId) || 0,
+        totalDishes: dishCountMap.get(restaurantId) || 0,
+      };
+      return result;
+    });
+
+    return { data, total };
+  }
+
+  async changeStatusRestaurant(id: string): Promise<Restaurant> {
+    const restaurant = await this.restaurantModel.findById(id);
+    if (!restaurant) {
+      throw new NotFoundException('Restaurant not found');
+    }
+    if (restaurant.status === 'Enable') {
+      restaurant.status = 'Disable';
+    } else {
+      restaurant.status = 'Enable';
+    }
+    return restaurant.save();
+  }
+
+  async rejectedRestaurant(id: string): Promise<Restaurant> {
+    const restaurant = await this.restaurantModel.findById(id);
+    if (!restaurant) {
+      throw new NotFoundException('Restaurant not found');
+    }
+    restaurant.status = 'Rejected';
+    return await restaurant.save();
+  }
+
+  async approvedRestaurant(id: string): Promise<Restaurant> {
+    const restaurant = await this.restaurantModel.findById(id);
+    if (!restaurant) {
+      throw new NotFoundException('Restaurant not found');
+    }
+    restaurant.status = 'Enable';
+
+    const owner = await this.restaurantOwnerModel.findById(restaurant.owner_id);
+    if (!owner) {
+      throw new NotFoundException('Owner not found');
+    }
+    owner.status = 'Enable';
+    await owner.save();
+    return await restaurant.save();
+  }
+
+  async fetchAllRestaurantPending(): Promise<Restaurant[]> {
+    const restaurants = await this.restaurantModel.find().populate({
+      path: 'owner_id',
+      match: { status: 'Pending' }, // chỉ populate nếu owner status là Pending
+    });
+    return restaurants.filter((r) => r.owner_id);
   }
 }

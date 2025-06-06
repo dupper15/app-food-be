@@ -113,10 +113,14 @@ export class CustomersController extends UserController<Customer> {
       const urls = await this.uploadService.uploadMultipleImages(avatar);
       avatarUrl = urls[0];
     }
+
+    const parsedEditUser = JSON.parse(data.editUser);
+
     const updatedData: any = {
-      ...data.editUser,
+      ...parsedEditUser,
       avatar: avatarUrl,
     };
+
 
     return this.customerService.editCustomerInfo(userId, updatedData);
   }

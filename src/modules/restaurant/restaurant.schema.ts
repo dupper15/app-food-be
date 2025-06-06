@@ -1,5 +1,4 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Types } from 'mongoose';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';import { Document, Types } from 'mongoose';
 
 @Schema({ timestamps: true })
 export class Restaurant extends Document {
@@ -33,7 +32,11 @@ export class Restaurant extends Document {
   @Prop({ required: false, default: [] })
   banners: Array<string>;
 
-  @Prop({ required: false, default: 'Enable', enum: ['Enable', 'Disable'] })
+  @Prop({
+    required: false,
+    default: 'Enable',
+    enum: ['Enable', 'Disable', 'Rejected'],
+  })
   status: string;
 
   @Prop({ default: false, required: false })

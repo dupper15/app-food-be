@@ -1,4 +1,5 @@
-import { BadRequestException, Injectable } from '@nestjs/common';import { InjectModel } from '@nestjs/mongoose';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
 import { Order } from './order.schema';
 import { Model, ObjectId, Types } from 'mongoose';
 import { CreateOrderDto } from './dto/createOrder.dto';
@@ -49,13 +50,14 @@ export class OrderService {
     const customer = await this.customerModel.findById(
       createOrderDto.customer_id,
     );
-    const restaurant = await this.restaurantModel.findById(
-      createOrderDto.restaurant_id,
-    );
+    const restaurant = await this.restaurantModel.findOne({
+      _id: createOrderDto.restaurant_id,
+    });
     if (!restaurant) {
       throw new BadRequestException('Restaurant not found');
     }
     const ownerId = restaurant.owner_id.toString();
+    console.log('ownerId', ownerId);
 
     if (!customer) {
       throw new BadRequestException('Customer not found');
@@ -128,7 +130,6 @@ export class OrderService {
       'New Re-Order Received',
       `A customer has placed a re-order #${newOrder._id.toString()}. Please process it promptly.`,
     );
-    return newOrder.save();
     return await newOrder.save();
   }
 
