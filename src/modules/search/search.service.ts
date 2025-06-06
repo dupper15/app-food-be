@@ -5,6 +5,8 @@ import { Model } from 'mongoose';
 import { Restaurant } from '../restaurant/restaurant.schema';
 import Fuse from 'fuse.js';
 import { ChatBotService } from '../chatbot/chatbot.service';
+import { HttpService } from '@nestjs/axios';
+import { firstValueFrom } from 'rxjs';
 @Injectable()
 export class SearchService {
   constructor(
@@ -12,6 +14,7 @@ export class SearchService {
     @InjectModel(Restaurant.name)
     private readonly restaurantModel: Model<Restaurant>,
     private readonly chatBotService: ChatBotService,
+    private readonly httpService: HttpService,
   ) {}
   async getTextSearch(query: string): Promise<Restaurant[]> {
     const dishes = await this.dishModel
@@ -76,12 +79,27 @@ export class SearchService {
     return Array.from(matchedRestaurants.values());
   }
   async getImageSearch(url: string): Promise<string> {
-    const prompt =
-      "Đây là một món ăn, hãy cho tôi biết tên món ăn này, trả về câu trả lời ngắn gọn theo form này (ví dụ 1: 'Phở bò', ví dụ 2: 'Bánh mì', ví dụ 3: 'Cơm sườn)";
-    const dishName = await this.chatBotService.generateTextFromImage(
-      url,
-      prompt,
+    const modelApiUrl = process.env.MODEL_IMAGE || 'http://localhost:8000';
+    const response = await firstValueFrom(
+      this.httpService.get(
+        `${modelApiUrl}/predict?url=${encodeURIComponent(url)}`,
+      ),
     );
-    return dishName;
+
+    const result = response.data.prediction_label;
+    return result;
+  }
+  async getf(imageUrl: string): Promise<string> {
+    const modelApiUrl = process.env.MODEL_IMAGE || 'http://localhost:8000';
+    console.log('imageUrl', imageUrl);
+    const response = await firstValueFrom(
+      this.httpService.get(
+        `${modelApiUrl}/predict?url=${encodeURIComponent(imageUrl)}`,
+      ),
+    );
+
+    console.log('response', response.data);
+    const result = response.data.prediction_label;
+    return result;
   }
 }
