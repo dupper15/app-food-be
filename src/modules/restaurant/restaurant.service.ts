@@ -1,4 +1,5 @@
-import { InjectModel } from '@nestjs/mongoose';import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { Model } from 'mongoose';
 import { Restaurant } from 'src/modules/restaurant/restaurant.schema';
 import { CreateRestaurantDto } from './dto/create-restaurant.dto';
@@ -574,6 +575,7 @@ export class RestaurantService {
       throw new NotFoundException('Owner not found');
     }
     owner.status = 'Enable';
+    await owner.save();
     return await restaurant.save();
   }
 
