@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
+import { Injectable } from '@nestjs/common';import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Customer } from '../customer/customer.schema';
 import { RestaurantOwner } from '../restaurant-owner/restaurant-owner.schema';
@@ -37,7 +36,7 @@ export class SmsService {
       customer.verified_code = null;
       await customer.save();
     } else if (restaurantOwner) {
-      if (restaurantOwner.verified_code !== code) {
+      if (restaurantOwner.verified_code?.toString() !== code.toString()) {
         throw new Error('Invalid verification code');
       }
       restaurantOwner.isVerified = true;
