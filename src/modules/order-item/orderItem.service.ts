@@ -1,5 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
+import { BadRequestException, Injectable } from '@nestjs/common';import { InjectModel } from '@nestjs/mongoose';
 import { OrderItem } from './orderItem.schema';
 import { Model, ObjectId, Types } from 'mongoose';
 import { CreateOrderItemDto } from './dto/createOrderItem.dto';
@@ -31,9 +30,9 @@ export class OrderItemService {
       editOrderItem,
       {
         new: true,
-        runValidators: true,
       },
     );
+    console.log('orderItem', orderItem);
     if (!orderItem) {
       throw new BadRequestException('No found order item');
     }

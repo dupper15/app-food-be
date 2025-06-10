@@ -45,7 +45,7 @@ export class OrderService {
     private readonly notificationService: NotificationService,
   ) {}
 
-  async createOrder(createOrderDto: CreateOrderDto): Promise<Order> {
+  async createOrder(createOrderDto: any): Promise<Order> {
     const newOrder = new this.orderModel(createOrderDto);
     const customer = await this.customerModel.findById(
       createOrderDto.customer_id,
@@ -92,7 +92,7 @@ export class OrderService {
     }
     for (const element of createOrderDto.array_item) {
       await this.orderItemModel.findByIdAndUpdate(
-        element._id,
+        element,
         {
           is_paid: true,
         },
@@ -313,30 +313,26 @@ export class OrderService {
     customerId: ObjectId,
   ): Promise<Order[]> {
     return await this.orderModel
-      .find({ customer_id: customerId, status: 'Success' })
+      .find({ customer_id: customerId, status: 'Completed' })
       .populate({
         path: 'restaurant_id',
-        select: 'name avatar',
+        select: 'name owner_id',
         populate: {
           path: 'owner_id',
           select: 'avatar _id',
         },
       })
       .populate({
-        path: 'voucher_id',
-        select: 'value max',
-      })
-      .populate({
         path: 'array_item',
-        select: 'dish_id quantity topping',
+        select: 'dish_id quantity',
         populate: {
           path: 'dish_id',
-          select: 'name image time price',
+          select: 'name image price',
         },
       })
-      .select(
-        'restaurant_id voucher_id array_item note total_price status time_receive used_point',
-      )
+      .select('restaurant_id array_item total_price status')
+      .sort({ createdAt: -1 })
+      .limit(5)
       .exec();
   }
   async fetchOngoingOrderByCustomer(customerId: ObjectId): Promise<Order[]> {
