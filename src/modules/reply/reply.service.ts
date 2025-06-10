@@ -38,4 +38,12 @@ export class ReplyService {
     }
     return reply;
   }
+
+  async deleteReply(id: string): Promise<string> {
+    const result = await this.replyModel.findByIdAndDelete(id);
+    if (!result) {
+      throw new NotFoundException(`Reply with id ${id} not found`);
+    }
+    return `Reply with id ${id} has been deleted`;
+  }
 }

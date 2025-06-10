@@ -5,6 +5,7 @@ import {
   Param,
   UseInterceptors,
   UploadedFiles,
+  Delete,
 } from '@nestjs/common';
 import { ReplyService } from './reply.service';
 import { Reply } from './reply.schema';
@@ -33,5 +34,10 @@ export class ReplyController {
     }
 
     return await this.replyService.createReply(id, data);
+  }
+
+  @Delete(':id')
+  async deleteReply(@Param('id') id: string): Promise<string> {
+    return await this.replyService.deleteReply(id);
   }
 }
