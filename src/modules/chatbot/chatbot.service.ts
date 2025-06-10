@@ -1,5 +1,4 @@
-import * as dotenv from 'dotenv';
-import { Injectable } from '@nestjs/common';
+import * as dotenv from 'dotenv';import { Injectable } from '@nestjs/common';
 import { OrderItemService } from '../order-item/orderItem.service';
 import { CartService } from '../cart/cart.service';
 import { OrderService } from '../order/order.service';
@@ -104,6 +103,7 @@ ${JSON.stringify(context, null, 2)}
    - Khi người dùng muốn **xem danh sách topping**, lấy restaurant_id từ món ăn gần nhất họ đã thêm vào giỏ hàng.
    - Khi trả ra topping cho người dùng, hãy nói: đây là danh sách topping có sẵn, không nói rõ món ăn nào.
    - Sau khi thêm topping, đừng nói rõ đã thêm topping vào món nào, chỉ cần nói đã thêm topping thành công.
+   - Khi người dùng chọn topping để thêm, hãy gọi hàm update_cart_item với **order_item_id** của món ăn mới nhất trong giỏ hàng.
 
 4. **Luồng hành động khuyến nghị**:
    - Sau khi thêm món vào giỏ → hỏi: “Bạn có muốn thêm topping không?”
@@ -239,7 +239,7 @@ ${JSON.stringify(context, null, 2)}
       timeZone: 'Asia/Ho_Chi_Minh',
     });
     const AImodel = this.getModel();
-    const prompt = `Bây giờ là ${vnTime}, hãy gợi ý cho tôi 10 món ăn ngon và phù hợp với thời gian này. Dưới đây là danh sách món ăn có sẵn: ${JSON.stringify(dishes)} hãy trả về cho tôi mảng các _id dạng ["123456", "789012",...] không trả lời thêm gì, chỉ cần mảng`;
+    const prompt = `Bây giờ là ${vnTime}, hãy gợi ý cho tôi 10 món ăn ngon và phù hợp với thời gian này, ưu tiên cơm sườn một chút. Dưới đây là danh sách món ăn có sẵn: ${JSON.stringify(dishes)} hãy trả về cho tôi mảng các _id dạng ["123456", "789012",...] không trả lời thêm gì, chỉ cần mảng`;
     const result = (await AImodel).generateContent(prompt);
     const response = (await result).response
       .text()

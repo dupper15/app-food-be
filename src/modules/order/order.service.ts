@@ -92,7 +92,7 @@ export class OrderService {
     }
     for (const element of createOrderDto.array_item) {
       await this.orderItemModel.findByIdAndUpdate(
-        element._id,
+        element,
         {
           is_paid: true,
         },
