@@ -2,7 +2,6 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Order } from './order.schema';
 import { Model, ObjectId, Types } from 'mongoose';
-import { CreateOrderDto } from './dto/createOrder.dto';
 import { Voucher } from '../voucher/voucher.schema';
 import { Customer } from '../customer/customer.schema';
 import { OrderItem } from '../order-item/orderItem.schema';
