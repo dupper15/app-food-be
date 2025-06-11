@@ -17,7 +17,10 @@ export class ReflectService {
   }
 
   async fetchAllReflect(): Promise<Reflect[]> {
-    return this.reflectModel.find().populate('replies_array').exec();
+    return this.reflectModel
+      .find()
+      .populate([{ path: 'replies_array' }, { path: 'customer_id' }])
+      .exec();
   }
 
   async fetchReflectByCustomer(customerId: string): Promise<Reflect[]> {
@@ -60,6 +63,7 @@ export class ReflectService {
         .skip(skip)
         .limit(limit)
         .populate('replies_array')
+        .populate('customer_id')
         .lean()
         .exec(),
       this.reflectModel.countDocuments().exec(),

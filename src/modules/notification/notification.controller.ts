@@ -30,4 +30,9 @@ export class NotificationController {
       content,
     );
   }
+
+  @Post('create')
+  async createNotification(@Body() data: any): Promise<any> {
+    return this.notificationService.createNotification(data);
+  }
 }

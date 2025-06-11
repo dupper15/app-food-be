@@ -1,8 +1,6 @@
 import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 export class CreateVoucherDto {
-  @IsNotEmpty()
-  @IsString()
-  restaurant_id: string;
+  restaurant_id?: string;
 
   @IsNotEmpty()
   @IsString()
