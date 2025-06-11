@@ -1,5 +1,4 @@
-import * as dotenv from 'dotenv';
-import { Injectable } from '@nestjs/common';
+import * as dotenv from 'dotenv';import { Injectable } from '@nestjs/common';
 import { OrderItemService } from '../order-item/orderItem.service';
 import { CartService } from '../cart/cart.service';
 import { OrderService } from '../order/order.service';
@@ -7,6 +6,7 @@ import { GoogleGenerativeAI, GenerativeModel } from '@google/generative-ai';
 import { RedisService } from '../redis/redis.service';
 import { DishService } from '../dish/dish.service';
 import { ToppingService } from '../topping/topping.service';
+import { ObjectId } from 'mongoose';
 
 dotenv.config();
 
@@ -98,8 +98,12 @@ ${JSON.stringify(context, null, 2)}
    - Nếu nói “món thứ 2” hoặc “món có phô mai”, hãy suy luận dựa vào danh sách món trong context.
 
 3. **Topping**:
-   - Khi người dùng nói thêm topping nhưng không nói rõ món nào, hãy thêm vào món **đầu tiên trong giỏ hàng**, hoặc mỗi món 1 phần.
+   - Khi người dùng nói thêm topping nhưng không nói rõ món nào, hãy thêm vào món **mới nhất được thêm vào giỏ hàng**, hoặc mỗi món 1 phần.
+   - Gọi hàm update_cart_item với **order_item_id** của món mới nhất trong giỏ hàng.
    - Khi người dùng muốn **xem danh sách topping**, lấy restaurant_id từ món ăn gần nhất họ đã thêm vào giỏ hàng.
+   - Khi trả ra topping cho người dùng, hãy nói: đây là danh sách topping có sẵn, không nói rõ món ăn nào.
+   - Sau khi thêm topping, đừng nói rõ đã thêm topping vào món nào, chỉ cần nói đã thêm topping thành công.
+   - Khi người dùng chọn topping để thêm, hãy gọi hàm update_cart_item với **order_item_id** của món ăn mới nhất trong giỏ hàng.
 
 4. **Luồng hành động khuyến nghị**:
    - Sau khi thêm món vào giỏ → hỏi: “Bạn có muốn thêm topping không?”
@@ -110,7 +114,7 @@ ${JSON.stringify(context, null, 2)}
    - Nếu xem lịch sử → hỏi: “Bạn có muốn đặt lại đơn hàng nào không?”
 
 5. **Về đơn hàng**:
-   - Nếu người dùng hỏi về đơn hàng, hãy trả lời theo hướng mở (VD: “Đây là đơn hàng của bạn”), **không nói về giỏ hàng** trừ khi họ yêu cầu.
+   - Nếu người dùng hỏi về đơn hàng, hãy trả lời theo hướng mở (VD: “Đây là đơn hàng của bạn", "Đây là các món ăn tôi nghĩ phù hợp với bạn", "Đã thanh toán",... không cần phải quá chi tiết), **không nói về giỏ hàng** trừ khi họ yêu cầu.
 
 6. **Lặp lại yêu cầu**:
    - Dù người dùng yêu cầu giống trước, vẫn trả lời bình thường – **không được nói là đã trả lời ở trên**.
@@ -131,6 +135,7 @@ ${JSON.stringify(context, null, 2)}
 11. Không được xuất các id người dùng, món ăn, nhà hàng, topping, đơn hàng, ...
     Không được nói những điều liên quan đến phần mềm như : hàm, ...
 12. Khi đã chọn được hàm, có các tham số cụ thể thì hãy trả lời bằng câu khẳng định, không được dùng câu hỏi
+13. Khi người dùng yêu cầu chỉnh số lượng món ăn nào đó, hay gọi hàm update_cart_item, với tham số là order_item_id của món ăn đó (món phù hợp với yêu cầu người dùng và mới nhất) lấy trong context, quantity
 `;
 
       const result = (await AImodel).generateContent(prompt);
@@ -234,7 +239,7 @@ ${JSON.stringify(context, null, 2)}
       timeZone: 'Asia/Ho_Chi_Minh',
     });
     const AImodel = this.getModel();
-    const prompt = `Bây giờ là ${vnTime}, hãy gợi ý cho tôi 10 món ăn ngon và phù hợp với thời gian này. Dưới đây là danh sách món ăn có sẵn: ${JSON.stringify(dishes)} hãy trả về cho tôi mảng các _id dạng ["123456", "789012",...] không trả lời thêm gì, chỉ cần mảng`;
+    const prompt = `Bây giờ là ${vnTime}, hãy gợi ý cho tôi 10 món ăn ngon và phù hợp với thời gian này, ưu tiên cơm sườn một chút. Dưới đây là danh sách món ăn có sẵn: ${JSON.stringify(dishes)} hãy trả về cho tôi mảng các _id dạng ["123456", "789012",...] không trả lời thêm gì, chỉ cần mảng`;
     const result = (await AImodel).generateContent(prompt);
     const response = (await result).response
       .text()
@@ -275,8 +280,7 @@ ${JSON.stringify(context, null, 2)}
         topping,
       },
     );
-    const cart = await this.cartService.getOrdersByUserId(order_item_id);
-    return cart;
+    return `Đã cập nhật món ăn trong giỏ hàng thành công.`;
   }
 
   async removeCartItem(args: any) {
@@ -289,12 +293,12 @@ ${JSON.stringify(context, null, 2)}
 
   async placeOrder(args: any) {
     const { array_item, customer_id, restaurant_id, total_price } = args;
-    // const data = { array_item, customer_id, restaurant_id, total_price };
-    //const order = await this.orderService.createOrder(data);
-    return `Đặt hàng cho người dùng ${customer_id} tại nhà hàng ${restaurant_id}. Tổng giá trị: ${total_price}.`;
+    const data = { array_item, customer_id, restaurant_id, total_price };
+    const order = await this.orderService.createOrder(data);
+    return `Đã đặt hàng thành công.`;
   }
 
-  async getOrderHistory(args: any) {
+  async getOrderHistory(args: { user_id: ObjectId }) {
     const { user_id } = args;
     const orders =
       await this.orderService.fetchSuccessfullOrderByCustomerTemp(user_id);
@@ -369,7 +373,8 @@ ${JSON.stringify(context, null, 2)}
     },
     {
       name: 'update_cart_item',
-      description: 'Chỉnh sửa thông tin món ăn trong giỏ hàng',
+      description:
+        'Chỉnh sửa thông tin món ăn trong giỏ hàng, như là thêm topping, cập nhật số lượng',
       parameters: {
         type: 'object',
         properties: {
@@ -403,14 +408,15 @@ ${JSON.stringify(context, null, 2)}
     },
     {
       name: 'place_order',
-      description: 'Tiến hành đặt hàng',
+      description:
+        'Tiến hành đặt hàng, hoặc người dùng muốn thanh toán giỏ hàng',
       parameters: {
         type: 'object',
         properties: {
           array_item: {
             type: 'array',
             items: { type: 'object' },
-            description: 'Danh sách món ăn đặt',
+            description: 'Mảng các id của các món ăn trong giỏ hàng',
           },
           customer_id: { type: 'objectId', description: 'ID người dùng' },
           restaurant_id: { type: 'objectId', description: 'ID nhà hàng' },
@@ -429,7 +435,7 @@ ${JSON.stringify(context, null, 2)}
     },
     {
       name: 'get_order_history',
-      description: 'Lấy lịch sử đơn hàng',
+      description: 'Lấy lịch sử đơn hàng đã thành công (cũ) của người dùng',
       parameters: {
         type: 'object',
         properties: {
@@ -440,7 +446,7 @@ ${JSON.stringify(context, null, 2)}
     },
     {
       name: 'reorder_previous',
-      description: 'Đặt lại đơn cũ',
+      description: 'Đặt lại đơn hàng nào đó người dùng muốn',
       parameters: {
         type: 'object',
         properties: {
@@ -452,7 +458,8 @@ ${JSON.stringify(context, null, 2)}
     },
     {
       name: 'view_ongoing_orders',
-      description: 'Xem các đơn hàng hiện tại của người dùng',
+      description:
+        'Xem các đơn hàng hiện tại của người dùng (không phải giỏ hàng)',
       parameters: {
         type: 'object',
         properties: {
