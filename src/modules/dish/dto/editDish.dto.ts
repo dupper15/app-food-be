@@ -1,5 +1,11 @@
 import { Type } from 'class-transformer';
-import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import {
+  IsBoolean,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 export class EditDishDto {
   @IsNotEmpty()
   @IsString()
@@ -30,4 +36,8 @@ export class EditDishDto {
   time: number;
 
   topping: string[];
+
+  @IsOptional()
+  @IsBoolean()
+  is_available?: boolean;
 }
