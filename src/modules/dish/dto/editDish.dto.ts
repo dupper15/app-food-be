@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { Type } from 'class-transformer';import {
+import {
   IsBoolean,
   IsNotEmpty,
   IsNumber,
