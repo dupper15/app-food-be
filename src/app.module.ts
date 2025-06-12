@@ -1,4 +1,5 @@
-import { Module } from '@nestjs/common';import { MongooseModule } from '@nestjs/mongoose';
+import { Module } from '@nestjs/common';
+import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule } from '@nestjs/config';
 import { RestaurantModule } from './modules/restaurant/restaurant.module';
 import { RestaurantOwnerModule } from './modules/restaurant-owner/restaurant-owner.module';
@@ -26,6 +27,7 @@ import { RedisModule } from './modules/redis/redis.module';
 import { SmsModule } from './modules/sms/sms.module';
 import { RecommendModule } from './modules/recommend-system/recommend.module';
 import { ChatGateway } from './gateways/chat.gateway';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
 dotenv.config();
 @Module({
   imports: [
@@ -57,6 +59,7 @@ dotenv.config();
     RedisModule,
     SmsModule,
     RecommendModule,
+    DashboardModule,
   ],
   controllers: [AppController],
   providers: [ChatGateway],

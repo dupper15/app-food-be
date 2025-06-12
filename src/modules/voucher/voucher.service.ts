@@ -1,4 +1,5 @@
-import { Injectable } from '@nestjs/common';import { InjectModel } from '@nestjs/mongoose';
+import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Voucher, VoucherDocument } from './voucher.schema';
 import { CreateVoucherDto } from './dto/create-voucher.dto';
@@ -11,6 +12,9 @@ export class VoucherService {
   ) {}
 
   async createVoucher(data: CreateVoucherDto): Promise<Voucher> {
+    if (data.restaurant_id) {
+      return this.voucherModel.create(data);
+    }
     return this.voucherModel.create(data);
   }
 

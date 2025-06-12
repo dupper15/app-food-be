@@ -5,6 +5,7 @@ import { CategoryController } from './category.controller';
 import { CategoryService } from './category.service';
 import { RestaurantModule } from '../restaurant/restaurant.module';
 import { DishModule } from '../dish/dish.module';
+import { UploadModule } from '../upload/upload.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { DishModule } from '../dish/dish.module';
     ]),
     RestaurantModule,
     DishModule,
+    UploadModule,
   ],
   controllers: [CategoryController],
   providers: [CategoryService],

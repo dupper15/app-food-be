@@ -8,6 +8,6 @@ export class Category {
   isDeleted: boolean;
 
   @Prop({ required: false })
-  image: boolean;
+  image: string;
 }
 export const CategorySchema = SchemaFactory.createForClass(Category);

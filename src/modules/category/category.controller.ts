@@ -5,20 +5,33 @@ import {
   Get,
   Param,
   Post,
-  UsePipes,
-  ValidationPipe,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
 import { CategoryService } from './category.service';
 import { CreateCategoryDto } from './dto/createCategory.dto';
 import { ObjectId } from 'mongoose';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { UploadService } from '../upload/upload.service';
 
 @Controller('categories')
 export class CategoryController {
-  constructor(private readonly categoryService: CategoryService) {}
+  constructor(
+    private readonly categoryService: CategoryService,
+    private readonly uploadService: UploadService,
+  ) {}
 
   @Post('create')
-  @UsePipes(new ValidationPipe())
-  async createCategoryController(@Body() createCategoryDto: CreateCategoryDto) {
+  @UseInterceptors(FileInterceptor('images'))
+  async createCategoryController(
+    @Body() createCategoryDto: CreateCategoryDto,
+    @UploadedFile() images: Express.Multer.File,
+  ) {
+    if (images) {
+      const image = await this.uploadService.uploadImage(images);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      createCategoryDto.image = image;
+    }
     return await this.categoryService.createCategory(createCategoryDto);
   }
 
