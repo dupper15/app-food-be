@@ -27,6 +27,10 @@ export class RatingService {
       .findById(order.restaurant_id)
       .exec();
     const restaurantId = restaurant?._id;
+    if (restaurant) {
+      restaurant.total_reviews += 1;
+      await restaurant.save();
+    }
     console.log('restaurantId', restaurantId);
     const ratingData = {
       ...createRatingDto,

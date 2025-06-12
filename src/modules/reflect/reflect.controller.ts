@@ -68,7 +68,9 @@ export class ReflectController {
   async fetchAllReflectByAdmin(
     @Query('page') page: 1,
     @Query('limit') limit: 2,
+    @Query('filter') filter: string = 'all',
+    @Query('q') q: string,
   ): Promise<{ data: Reflect[]; total: number }> {
-    return this.reflectService.fetchAllReflectByAdmin(page, limit);
+    return this.reflectService.fetchAllReflectByAdmin(page, limit, filter, q);
   }
 }

@@ -3,4 +3,6 @@ export class CreateCategoryDto {
   @IsNotEmpty()
   @IsString()
   name: string;
+
+  image?: string;
 }

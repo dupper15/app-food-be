@@ -123,8 +123,6 @@ export class NotificationService {
 
     for (const user of allUsers) {
       const { _id, expo_push_token } = user;
-
-      // Gửi push notification nếu token hợp lệ
       if (expo_push_token && expo_push_token.startsWith('ExponentPushToken')) {
         const message = {
           to: expo_push_token,
@@ -143,7 +141,7 @@ export class NotificationService {
             },
           });
         } catch (error) {
-          console.warn(`Failed to send push to user ${_id}:`, error.message);
+          console.warn(`Failed to send push to user ${String(_id)}:`, error);
         }
       }
       notifications.push({
@@ -153,12 +151,8 @@ export class NotificationService {
         isSeen: false,
       });
     }
-
-    const result = await this.notificationModel.insertMany(notifications);
-
     return {
       message: `Đã gửi thông báo đến ${allUsers.length} người dùng.`,
-      data: result,
     };
   }
 }
