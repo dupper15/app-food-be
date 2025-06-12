@@ -51,42 +51,33 @@ export class DashboardService {
     };
   }
   async getMonthOrder() {
-    const twelveMonthsAgo = moment()
-      .subtract(11, 'months')
-      .startOf('month')
-      .toDate();
-
+    const startOfYear = moment().startOf('year').toDate();
+    const endOfYear = moment().endOf('year').toDate();
     const result = await this.orderModel.aggregate([
       {
         $match: {
-          createdAt: { $gte: twelveMonthsAgo },
+          createdAt: {
+            $gte: startOfYear,
+            $lte: endOfYear,
+          },
         },
       },
       {
         $group: {
-          _id: {
-            year: { $year: '$createdAt' },
-            month: { $month: '$createdAt' },
-          },
-          totalOrders: { $sum: 1 },
+          _id: { month: { $month: '$createdAt' } },
+          orders: { $sum: 1 },
         },
       },
       {
-        $sort: { '_id.year': 1, '_id.month': 1 },
+        $sort: { '_id.month': 1 },
       },
     ]);
     const monthlyData = Array.from({ length: 12 }).map((_, idx) => {
-      const date = moment().subtract(11 - idx, 'months');
-      const year = date.year();
-      const month = date.month() + 1;
-
-      const found = result.find(
-        (r) => r._id.year === year && r._id.month === month,
-      );
-
+      const month = idx + 1;
+      const found = result.find((r) => r._id.month === month);
       return {
-        month: `${year}-${month.toString().padStart(2, '0')}`,
-        totalOrders: found?.totalOrders || 0,
+        month: moment().month(idx).format('MMM'), // 'Jan', 'Feb', ...
+        orders: found?.orders || 0,
       };
     });
     return monthlyData;
@@ -125,7 +116,7 @@ export class DashboardService {
       {
         $group: {
           _id: { month: { $month: '$createdAt' } },
-          totalDishesSold: { $sum: '$items.quantity' },
+          value: { $sum: '$items.quantity' },
         },
       },
       {
@@ -134,14 +125,15 @@ export class DashboardService {
         },
       },
     ]);
+    const currentMonth = moment().month() + 1;
     // Chuẩn hóa kết quả cho đủ 12 tháng
-    const monthlyData = Array.from({ length: 12 }).map((_, idx) => {
+    const monthlyData = Array.from({ length: currentMonth }).map((_, idx) => {
       const month = idx + 1;
       const found = result.find((r) => r._id.month === month);
 
       return {
-        month: `${month.toString().padStart(2, '0')}`,
-        totalDishesSold: found?.totalDishesSold || 0,
+        month: moment().month(idx).format('MMM'), // 'Jan', 'Feb', ...
+        value: found?.value || 0,
       };
     });
     return monthlyData;
@@ -149,7 +141,7 @@ export class DashboardService {
   async getTopTenRestaurant(filter: string = 'order', sortBy: string = 'desc') {
     const allRestaurants = await this.restaurantModel.find().exec();
 
-    const restaurantsWithRatings = await Promise.all(
+    const restaurantsWithMetrics = await Promise.all(
       allRestaurants.map(async (restaurantDoc) => {
         const restaurant = restaurantDoc.toObject() as Restaurant & {
           _id: Types.ObjectId;
@@ -176,7 +168,11 @@ export class DashboardService {
       }),
     );
 
-    const sorted = restaurantsWithRatings.sort((a, b) => {
+    const topRevenueRestaurants = restaurantsWithMetrics
+      .sort((a, b) => b.totalRevenue - a.totalRevenue)
+      .slice(0, 10);
+
+    const sorted = topRevenueRestaurants.sort((a, b) => {
       let aValue = 0;
       let bValue = 0;
 
@@ -211,6 +207,7 @@ export class DashboardService {
 
     const mappedCustomers = allCustomers.map((customer) => ({
       _id: customer._id,
+      name: customer.name,
       avatar: customer.avatar,
       email: customer.email,
       phone: customer.phone,
@@ -294,6 +291,7 @@ export class DashboardService {
 
       return {
         _id: dish._id,
+        image: dish.image,
         name: dish.name,
         restaurant_name: restaurantName,
         price: dish.price,
@@ -301,7 +299,7 @@ export class DashboardService {
         total_sale: data?.totalPrice || 0,
       };
     });
-    return result.slice(0, 10);
+    return result.slice(0, 10).reverse();
   }
   async getPieChartOrder() {
     const completedOrders = await this.orderModel.countDocuments({
@@ -340,13 +338,12 @@ export class DashboardService {
     ).length;
     const otherOrders = totalOrders - cancelledOrders;
 
-    return {
-      totalOrders,
-      cancelledOrders,
-      otherOrders,
-    };
+    return [
+      { name: 'Total Orders', value: totalOrders },
+      { name: 'Cancelled Orders', value: cancelledOrders },
+      { name: 'Other Orders', value: otherOrders },
+    ];
   }
-
   async getTotalDish() {
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
