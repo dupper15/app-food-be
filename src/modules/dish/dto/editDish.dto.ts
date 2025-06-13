@@ -1,4 +1,4 @@
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
   IsBoolean,
   IsNotEmpty,
@@ -38,7 +38,7 @@ export class EditDishDto {
   topping: string[];
 
   @IsOptional()
-  @Type(() => Boolean) 
+  @Transform(({ value }) => value === 'true' || value === true)
   @IsBoolean()
   isAvailable?: boolean;
 }
