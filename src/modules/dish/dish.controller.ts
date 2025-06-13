@@ -47,7 +47,6 @@ export class DishController {
   ) {
     const updateData = { ...editDishDto };
 
-    updateData.isAvailable = updateData.isAvailable === 'true';
 
     if (imageUpload) {
       const uploadImageUrl = await this.uploadService.uploadImage(imageUpload);
