@@ -12,6 +12,9 @@ export class VoucherService {
   ) {}
 
   async createVoucher(data: CreateVoucherDto): Promise<Voucher> {
+    if (data.restaurant_id) {
+      return this.voucherModel.create(data);
+    }
     return this.voucherModel.create(data);
   }
 
@@ -24,7 +27,7 @@ export class VoucherService {
   }
 
   async fetchSystemVouchers(): Promise<Voucher[]> {
-    return this.voucherModel.find().exec();
+    return this.voucherModel.find({ restaurant_id: null }).exec();
   }
 
   async fetchAvailableVouchers(restaurantId: string): Promise<Voucher[]> {

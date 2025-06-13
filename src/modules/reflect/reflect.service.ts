@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
+import { Injectable } from '@nestjs/common';import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Reflect, ReflectDocument } from './reflect.schema';
 import { CreateReflectDto } from './dto/createReflect';
@@ -17,7 +16,10 @@ export class ReflectService {
   }
 
   async fetchAllReflect(): Promise<Reflect[]> {
-    return this.reflectModel.find().populate('replies_array').exec();
+    return this.reflectModel
+      .find()
+      .populate([{ path: 'replies_array' }, { path: 'customer_id' }])
+      .exec();
   }
 
   async fetchReflectByCustomer(customerId: string): Promise<Reflect[]> {
@@ -51,18 +53,31 @@ export class ReflectService {
   async fetchAllReflectByAdmin(
     page: number,
     limit: number,
+    filter: string = 'all',
+    q?: string,
   ): Promise<{ data: Reflect[]; total: number }> {
     const skip = (page - 1) * limit;
+    const searchCondition: any = {};
+    if (q) {
+      searchCondition['customer_id.name'] = { $regex: q, $options: 'i' };
+    }
+
+    if (filter === 'replied') {
+      searchCondition['replies_array.0'] = { $exists: true }; // replies_array có ít nhất 1 phần tử
+    } else if (filter === 'unreplied') {
+      searchCondition['replies_array'] = { $size: 0 }; // replies_array rỗng
+    }
 
     const [data, total] = await Promise.all([
       this.reflectModel
-        .find()
+        .find(searchCondition)
         .skip(skip)
         .limit(limit)
         .populate('replies_array')
+        .populate('customer_id')
         .lean()
         .exec(),
-      this.reflectModel.countDocuments().exec(),
+      this.reflectModel.countDocuments(searchCondition).exec(),
     ]);
 
     return { data, total };
